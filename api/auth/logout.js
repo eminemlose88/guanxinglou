@@ -10,8 +10,10 @@ export default function handler(req,res){
     if(opts.httpOnly) parts.push('HttpOnly')
     if(opts.secure) parts.push('Secure')
     if(opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+    if(opts.domain) parts.push(`Domain=${opts.domain}`)
     return parts.join('; ')
   }
-  res.setHeader('Set-Cookie', buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax' }))
+  const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
+  res.setHeader('Set-Cookie', buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax', domain: domainFromReq(req) }))
   res.status(200).json({ ok:true })
 }

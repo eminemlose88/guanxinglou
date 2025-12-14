@@ -7,6 +7,7 @@ const buildCookie=(name,value,opts={})=>{
   if(opts.httpOnly) parts.push('HttpOnly')
   if(opts.secure) parts.push('Secure')
   if(opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+  if(opts.domain) parts.push(`Domain=${opts.domain}`)
   return parts.join('; ')
 }
 
@@ -16,6 +17,7 @@ const parseCookies=(cookieHeader)=>{
   return out
 }
 
+const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
 export default async function handler(req,res){
   const cookies=parseCookies(req.headers.cookie)
   const raw=cookies['sb_token']
@@ -37,7 +39,7 @@ export default async function handler(req,res){
   const display=(data.user.user_metadata&&data.user.user_metadata.display_name)||email.split('@')[0]||email
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
-  // refresh cookie TTL
-  res.setHeader('Set-Cookie', buildCookie('sb_token', raw, { path:'/', maxAge:7*24*60*60, httpOnly:true, secure:true, sameSite:'Lax' }))
+  // refresh cookie TTL scoped to primary domain
+  res.setHeader('Set-Cookie', buildCookie('sb_token', raw, { path:'/', maxAge:7*24*60*60, httpOnly:true, secure:true, sameSite:'Lax', domain: domainFromReq(req) }))
   res.status(200).json({ uid: data.user.id, user_name: display, role })
 }

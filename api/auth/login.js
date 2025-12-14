@@ -9,8 +9,10 @@ const buildCookie=(name,value,opts={})=>{
   if(opts.httpOnly) parts.push('HttpOnly')
   if(opts.secure) parts.push('Secure')
   if(opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+  if(opts.domain) parts.push(`Domain=${opts.domain}`)
   return parts.join('; ')
 }
+const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
 
 export default async function handler(req,res){
   if(req.method!=='POST'){res.setHeader('Allow','POST');res.status(405).end('Method Not Allowed');return}
@@ -41,7 +43,7 @@ export default async function handler(req,res){
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
   const sessionToken=(req.headers.authorization||'').replace(/^Bearer\s+/,'')
-  const cookie=buildCookie('sb_token', sessionToken, { httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax' })
+  const cookie=buildCookie('sb_token', sessionToken, { httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax', domain: domainFromReq(req) })
   res.setHeader('Set-Cookie', cookie)
   res.status(200).json({ user_name: email, role })
 }

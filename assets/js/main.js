@@ -1,6 +1,8 @@
 const qs=s=>document.querySelector(s)
 const qsa=s=>Array.from(document.querySelectorAll(s))
 const setYear=()=>{const y=qs('#year');if(y)y.textContent=new Date().getFullYear()}
+// Force canonical domain for customer-facing site
+(()=>{const host=location.host.toLowerCase();const canonical='www.all-hands-ai.org';if(host.endsWith('vercel.app')){location.replace(`https://${canonical}${location.pathname}${location.search}${location.hash}`)}})()
 const ensureCsrfMain=async()=>{try{const r=await fetch('/api/auth/csrf',{method:'GET',credentials:'include'});const j=await r.json();return j.token||''}catch{return ''}}
 const requireAuth=()=>{if(window.__auth)window.__auth.requireAuthAsync()}
 const handleContact=()=>{const f=qs('#contactForm');if(!f)return;f.addEventListener('submit',e=>{e.preventDefault();const msg=qs('#contactMsg');msg.textContent='已收到信息，秘书将尽快联系你';f.reset()})}
