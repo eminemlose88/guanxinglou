@@ -5,6 +5,17 @@ const initSupabase=()=>{
   window.__sbClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY)
   return window.__sbClient
 }
+const injectScript=(src)=>new Promise(res=>{const s=document.createElement('script');s.src=src;s.onload=()=>res(true);s.onerror=()=>res(false);document.head.appendChild(s)})
+const ensureConfigLoaded=async()=>{
+  if(window.SUPABASE_URL&&window.SUPABASE_ANON_KEY) return true
+  const ok=await injectScript('/api/config?ts='+Date.now())
+  return ok && !!(window.SUPABASE_URL&&window.SUPABASE_ANON_KEY)
+}
+const ensureSDKLoaded=async()=>{
+  if(typeof window.supabase!=='undefined'&&window.supabase.createClient) return true
+  const ok=await injectScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js')
+  return ok && typeof window.supabase!=='undefined' && !!window.supabase.createClient
+}
 const normalizeEmail=e=>String(e||'').trim().toLowerCase()
 const getCookie=(name)=>document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.split('=')[1]||''
 const ensureCsrf=async()=>{const c=getCookie('csrf_token');if(c)return c;try{const r=await fetch('/api/auth/csrf',{method:'POST'});const j=await r.json();return j.token||''}catch{return ''}}
@@ -26,7 +37,9 @@ const wireSupabaseLogin=()=>{
     const password=(d.get('password')||'').toString()
     if(!/^\S+@\S+\.\S+$/.test(email)){msg.textContent='请输入合法邮箱地址';return}
     if(password.length<6){msg.textContent='密码至少6位';return}
-    const sb=initSupabase()
+    const readyCfg=await ensureConfigLoaded()
+    const readySdk=await ensureSDKLoaded()
+    const sb=readyCfg&&readySdk?initSupabase():null
     btn && (btn.disabled=true,btn.classList.add('disabled'),btn.textContent='登陆中…')
     try{
       if(sb){
@@ -39,17 +52,16 @@ const wireSupabaseLogin=()=>{
           return
         }
         const csrf=await ensureCsrf()
-        if(!csrf){msg.textContent='安全初始化失败，请刷新后重试';alert('安全初始化失败，请刷新后重试');return}
+        if(!csrf){msg.textContent='系统忙，请稍后再试';return}
         const resp=await fetch('/api/auth/login',{method:'POST',headers:{'x-csrf-token':csrf,Authorization:`Bearer ${data.session?.access_token||''}`},credentials:'include'})
-        if(!resp.ok){const j=await resp.json().catch(()=>({error:'登录失败'}));msg.textContent=j.error||'登录失败';alert(j.error||'登录失败');return}
+        if(!resp.ok){const j=await resp.json().catch(()=>({error:'登录失败'}));msg.textContent=j.error||'登录失败';return}
         const me=await fetch('/api/auth/me',{credentials:'include'})
-        if(me.status!==200){msg.textContent='会话验证失败';alert('会话验证失败');return}
-      }else{ msg.textContent='配置缺失，无法登录';alert('配置缺失，无法登录');return }
+        if(me.status!==200){msg.textContent='系统忙，请稍后再试';return}
+      }else{ msg.textContent='系统忙，请稍后再试';return }
       msg.textContent='登陆成功，正在跳转…'
       setTimeout(()=>location.href='must-read.html',600)
     }catch(e){
-      msg.textContent='网络异常或服务器错误'
-      alert('网络异常或服务器错误')
+      msg.textContent='系统忙，请稍后再试'
     }finally{
       btn && (btn.disabled=false,btn.classList.remove('disabled'),btn.textContent='登陆')
     }
