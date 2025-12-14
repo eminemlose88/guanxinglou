@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>升级管理员｜观星楼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-protected>
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="index.html">观星楼</a>
+      <nav class="menu">
+        <a href="must-read.html">包养必看</a>
+        <a href="selection.html">选妃</a>
+        <a href="about.html">关于我们</a>
+        <a href="contact.html">联系我们</a>
+        <a class="btn" id="logoutLink" href="login.html">退出登录</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="section container narrow">
+      <div class="section-head center">
+        <h2>升级为管理员</h2>
+        <span>仅白名单邮箱可用</span>
+      </div>
+      <div class="cta">
+        <button class="btn primary" id="promoteBtn">升级</button>
+      </div>
+      <div class="compliance" id="promoteMsg"></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>© <span id="year"></span> 观星楼</div>
+      <div class="legal">仅白名单邮箱可升级</div>
+    </div>
+  </footer>
+  <script src="/api/config"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/promote.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

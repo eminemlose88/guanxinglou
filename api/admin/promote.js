@@ -2,7 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { parseCookies, decrypt } from '../_lib/secure'
 
 const canPromote=(email)=>{
-  const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
+  const defaultAllow='eminemlose88@gmail.com'
+  const allow=(process.env.SUPABASE_ADMIN_EMAILS||defaultAllow).split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   return allow.includes(String(email||'').toLowerCase())
 }
 
