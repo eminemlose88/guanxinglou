@@ -31,7 +31,13 @@ const wireSupabaseLogin=()=>{
     try{
       if(sb){
         const {data, error}=await sb.auth.signInWithPassword({email,password})
-        if(error){msg.textContent=error.message;alert(error.message);return}
+        if(error){
+          try{
+            const r=await fetch('/api/auth/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+            if(r.ok){const j=await r.json();msg.textContent=j.exists?'密码错误':'找不到邮箱'} else {msg.textContent='登录失败'}
+          }catch{msg.textContent='登录失败'}
+          return
+        }
         const csrf=await ensureCsrf()
         if(!csrf){msg.textContent='安全初始化失败，请刷新后重试';alert('安全初始化失败，请刷新后重试');return}
         const resp=await fetch('/api/auth/login',{method:'POST',headers:{'x-csrf-token':csrf,Authorization:`Bearer ${data.session?.access_token||''}`},credentials:'include'})

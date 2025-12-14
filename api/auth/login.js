@@ -35,7 +35,13 @@ export default async function handler(req,res){
   let role='user'
   if(srv){
     const { data:ud } = await srv.from('users').select('role').eq('supabase_uid',uid).limit(1)
-    if(Array.isArray(ud)&&ud[0]?.role) role=ud[0].role
+    if(Array.isArray(ud)&&ud[0]?.role){
+      role=ud[0].role
+    } else {
+      const uname=(email||'').split('@')[0]
+      const { data:created } = await srv.from('users').upsert({ supabase_uid: uid, email, username: uname, status:'active' },{ onConflict:'supabase_uid' }).select('role').limit(1)
+      if(Array.isArray(created)&&created[0]?.role) role=created[0].role
+    }
   }
   const now=Date.now()
   const exp=now+30*24*60*60*1000
