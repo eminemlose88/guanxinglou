@@ -4,7 +4,7 @@ const pick=(...keys)=>{for(const k of keys){const v=process.env[k];if(v) return 
 export default async function handler(req,res){
   const conn=pick('POSTGRES_URL_NON_POOLING','POSTGRES_PRISMA_URL','POSTGRES_URL')
   if(!conn){res.status(500).json({error:'POSTGRES connection string not configured'});return}
-  const client=new Client({connectionString:conn})
+  const client=new Client({connectionString:conn, ssl:{ rejectUnauthorized:false }})
   const started=Date.now()
   let connectMs=0
   try{
