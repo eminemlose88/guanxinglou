@@ -13,7 +13,10 @@ const ensureConfigLoaded=async()=>{
 }
 const ensureSDKLoaded=async()=>{
   if(typeof window.supabase!=='undefined'&&window.supabase.createClient) return true
-  const ok=await injectScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js')
+  let ok=await injectScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js')
+  if(!(ok && window.supabase && window.supabase.createClient)){
+    ok=await injectScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm')
+  }
   return ok && typeof window.supabase!=='undefined' && !!window.supabase.createClient
 }
 const normalizeEmail=e=>String(e||'').trim().toLowerCase()
