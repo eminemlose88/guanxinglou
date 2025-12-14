@@ -5,13 +5,7 @@ const initSupabase=()=>{
   window.supabase=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY)
   return window.supabase
 }
-const normalizePhone=p=>{
-  const s=(p||'').trim()
-  if(!s) return ''
-  if(s.startsWith('+')) return s
-  if(/^1\d{10}$/.test(s)) return '+86'+s
-  return s
-}
+const normalizeEmail=e=>String(e||'').trim().toLowerCase()
 const hasLocalSession=()=>{
   try{const t=localStorage.getItem(AUTH_KEY);return !!t}catch{return false}
 }
@@ -27,16 +21,16 @@ const wireSupabaseLogin=()=>{
   f.addEventListener('submit',async e=>{
     e.preventDefault()
     const d=new FormData(f)
-    const phone=normalizePhone((d.get('phone')||'').toString())
+    const email=normalizeEmail((d.get('email')||'').toString())
     const password=(d.get('password')||'').toString()
-    if(!/^\+\d{6,}$/.test(phone)){msg.textContent='请输入合法手机号（国内自动加+86）';return}
+    if(!/^\S+@\S+\.\S+$/.test(email)){msg.textContent='请输入合法邮箱地址';return}
     if(password.length<6){msg.textContent='密码至少6位';return}
     const sb=initSupabase()
     if(sb){
-      const {error}=await sb.auth.signInWithPassword({phone,password})
+      const {error}=await sb.auth.signInWithPassword({email,password})
       if(error){msg.textContent=error.message;return}
     }else{
-      localStorage.setItem(AUTH_KEY,JSON.stringify({phone,ts:Date.now()}))
+      localStorage.setItem(AUTH_KEY,JSON.stringify({email,ts:Date.now()}))
     }
     msg.textContent='登陆成功，正在跳转…'
     setTimeout(()=>location.href='must-read.html',600)

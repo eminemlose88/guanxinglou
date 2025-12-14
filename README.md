@@ -25,11 +25,10 @@ npm install
 在 Supabase SQL 编辑器运行 `supabase/schema.sql`，创建 `profiles` 表与 RLS 策略。
 
 ## 登录
-- 客户端使用 Supabase Auth `signInWithPassword`（手机号自动加 +86 前缀）
+- 客户端使用 Supabase Auth `signInWithPassword({ email, password })`
 - 未登录访问 `must-read.html` / `selection.html` 会跳转登陆页
 
 ## 部署到 Vercel
 1. 推送到 GitHub 仓库
 2. Vercel 导入仓库，设置环境变量
 3. 部署完成后即可访问
-
