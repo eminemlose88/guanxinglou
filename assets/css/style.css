@@ -60,6 +60,12 @@ a{color:inherit;text-decoration:none}
 .footer-inner{display:flex;align-items:center;justify-content:space-between;height:72px}
 .legal{color:var(--muted);font-size:12px}
 .narrow{max-width:640px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
+.modal.show{display:flex}
+.modal-inner{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:720px;margin:0 16px;padding:20px}
+.modal h3{margin:0 0 8px 0}
+.modal p{white-space:pre-line;color:var(--muted)}
+.modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
 .contact-grid{grid-template-columns:repeat(3,1fr)}
 @media(max-width:960px){.contact-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.contact-grid{grid-template-columns:1fr}}

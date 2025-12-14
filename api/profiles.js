@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { parseCookies, decrypt } from './_lib/secure'
 
 const getServiceClient=()=>{
   const url=process.env.SUPABASE_URL
@@ -19,10 +20,19 @@ export default async function handler(req,res){
   if(!sb){res.status(500).json({error:'Supabase service not configured'})
     return}
   if(req.method==='GET'){
-    const token=getBearer(req)
-    if(!token){res.status(401).json({error:'Unauthorized'});return}
-    const { data:userData, error:authError } = await sb.auth.getUser(token)
-    if(authError||!userData?.user){res.status(401).json({error:'Unauthorized'});return}
+    let authed=false
+    const cookies=parseCookies(req.headers.cookie)
+    const raw=cookies['auth_token']
+    const payload=decrypt(raw,process.env.SUPABASE_JWT_SECRET||process.env.AUTH_COOKIE_SECRET||'changeme')
+    if(payload&&payload.exp>Date.now()) authed=true
+    if(!authed){
+      const token=getBearer(req)
+      if(token){
+        const { data:userData } = await sb.auth.getUser(token)
+        authed=!!userData?.user
+      }
+    }
+    if(!authed){res.status(401).json({error:'Unauthorized'});return}
     const { data, error } = await sb.from('profiles').select('id,name,city,age,tags,bio,published').eq('published',true).order('created_at',{ascending:false})
     if(error){res.status(500).json({error:error.message});return}
     res.status(200).json({data})
