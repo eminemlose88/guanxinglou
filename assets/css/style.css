@@ -84,3 +84,9 @@ a{color:inherit;text-decoration:none}
 .trust-card p{color:var(--muted)}
 .cta-block{display:flex;gap:12px;justify-content:center;margin-top:14px}
 .compliance{color:var(--muted);font-size:13px;margin-top:12px;text-align:center}
+.user-menu{position:relative}
+.user-menu .trigger{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer}
+.user-menu .dropdown{position:absolute;top:110%;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;min-width:200px;padding:8px;display:none}
+.user-menu.open .dropdown{display:block}
+.user-menu .dropdown a,.user-menu .dropdown button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px}
+.user-menu .dropdown a:hover,.user-menu .dropdown button:hover{background:#1b1f29}

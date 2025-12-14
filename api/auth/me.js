@@ -34,9 +34,10 @@ export default async function handler(req,res){
     return
   }
   const email=data.user.email||''
+  const display=(data.user.user_metadata&&data.user.user_metadata.display_name)||email.split('@')[0]||email
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
   // refresh cookie TTL
   res.setHeader('Set-Cookie', buildCookie('sb_token', raw, { path:'/', maxAge:7*24*60*60, httpOnly:true, secure:true, sameSite:'Lax' }))
-  res.status(200).json({ uid: data.user.id, user_name: email, role })
+  res.status(200).json({ uid: data.user.id, user_name: display, role })
 }
