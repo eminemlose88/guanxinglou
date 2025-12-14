@@ -1,8 +1,9 @@
 const initSupabase=()=>{
-  if(window.supabase) return window.supabase
+  if(window.__sbClient) return window.__sbClient
   if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY){console.warn('Supabase config missing');return null}
-  window.supabase=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY)
-  return window.supabase
+  if(typeof window.supabase==='undefined' || !window.supabase.createClient){console.warn('Supabase SDK not loaded');return null}
+  window.__sbClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY)
+  return window.__sbClient
 }
 const normalizeEmail=e=>String(e||'').trim().toLowerCase()
 const getCookie=(name)=>document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.split('=')[1]||''
@@ -17,6 +18,7 @@ const requireAuthAsync=async()=>{
 const wireSupabaseLogin=()=>{
   const f=document.querySelector('#loginForm');if(!f) return
   const msg=document.querySelector('#loginMsg')
+  const btn=f.querySelector('button[type="submit"]')
   f.addEventListener('submit',async e=>{
     e.preventDefault()
     const d=new FormData(f)
@@ -25,14 +27,26 @@ const wireSupabaseLogin=()=>{
     if(!/^\S+@\S+\.\S+$/.test(email)){msg.textContent='请输入合法邮箱地址';return}
     if(password.length<6){msg.textContent='密码至少6位';return}
     const sb=initSupabase()
-    if(sb){
-      const {data, error}=await sb.auth.signInWithPassword({email,password})
-      if(error){msg.textContent=error.message;return}
-      const csrf=await ensureCsrf()
-      await fetch('/api/auth/login',{method:'POST',headers:{'x-csrf-token':csrf,Authorization:`Bearer ${data.session?.access_token||''}`},credentials:'include'})
-    }else{ msg.textContent='配置缺失，无法登录';return }
-    msg.textContent='登陆成功，正在跳转…'
-    setTimeout(()=>location.href='must-read.html',600)
+    btn && (btn.disabled=true,btn.classList.add('disabled'),btn.textContent='登陆中…')
+    try{
+      if(sb){
+        const {data, error}=await sb.auth.signInWithPassword({email,password})
+        if(error){msg.textContent=error.message;alert(error.message);return}
+        const csrf=await ensureCsrf()
+        if(!csrf){msg.textContent='安全初始化失败，请刷新后重试';alert('安全初始化失败，请刷新后重试');return}
+        const resp=await fetch('/api/auth/login',{method:'POST',headers:{'x-csrf-token':csrf,Authorization:`Bearer ${data.session?.access_token||''}`},credentials:'include'})
+        if(!resp.ok){const j=await resp.json().catch(()=>({error:'登录失败'}));msg.textContent=j.error||'登录失败';alert(j.error||'登录失败');return}
+        const me=await fetch('/api/auth/me',{credentials:'include'})
+        if(me.status!==200){msg.textContent='会话验证失败';alert('会话验证失败');return}
+      }else{ msg.textContent='配置缺失，无法登录';alert('配置缺失，无法登录');return }
+      msg.textContent='登陆成功，正在跳转…'
+      setTimeout(()=>location.href='must-read.html',600)
+    }catch(e){
+      msg.textContent='网络异常或服务器错误'
+      alert('网络异常或服务器错误')
+    }finally{
+      btn && (btn.disabled=false,btn.classList.remove('disabled'),btn.textContent='登陆')
+    }
   })
 }
 const wireLogout=()=>{const el=document.querySelector('#logoutLink');if(!el)return;el.addEventListener('click',async e=>{e.preventDefault();const csrf=await ensureCsrf();await fetch('/api/auth/logout',{method:'POST',headers:{'x-csrf-token':csrf},credentials:'include'});location.href='login.html'})}
