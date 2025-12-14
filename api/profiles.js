@@ -7,11 +7,22 @@ const getServiceClient=()=>{
   return createClient(url,key)
 }
 
+const getBearer=(req)=>{
+  const h=req.headers['authorization']||req.headers['Authorization']
+  if(!h) return ''
+  const m=String(h).match(/^Bearer\s+(.+)$/)
+  return m?m[1]:''
+}
+
 export default async function handler(req,res){
   const sb=getServiceClient()
   if(!sb){res.status(500).json({error:'Supabase service not configured'})
     return}
   if(req.method==='GET'){
+    const token=getBearer(req)
+    if(!token){res.status(401).json({error:'Unauthorized'});return}
+    const { data:userData, error:authError } = await sb.auth.getUser(token)
+    if(authError||!userData?.user){res.status(401).json({error:'Unauthorized'});return}
     const { data, error } = await sb.from('profiles').select('id,name,city,age,tags,bio,published').eq('published',true).order('created_at',{ascending:false})
     if(error){res.status(500).json({error:error.message});return}
     res.status(200).json({data})

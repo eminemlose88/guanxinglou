@@ -23,7 +23,9 @@ const wireFilters=()=>{['#filterCity','#filterTag','#filterSearch'].forEach(s=>{
 const loadProfiles=async()=>{
   const wrap=qs('#profiles');if(!wrap)return
   try{
-    const res=await fetch('/api/profiles')
+    let headers={}
+    if(window.__auth){const sb=__auth.initSupabase();if(sb){const {data:{session}}=await sb.auth.getSession();if(session) headers={Authorization:`Bearer ${session.access_token}`}}}
+    const res=await fetch('/api/profiles',{headers})
     if(res.ok){const json=await res.json();profiles=(json.data||[]).map(p=>({name:p.name,city:p.city,age:p.age,tags:p.tags,bio:p.bio}))}
   }catch(e){/* keep demo data */}
   renderFilters();renderProfiles()
