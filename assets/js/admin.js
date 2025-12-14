@@ -77,6 +77,14 @@ const wireAdminForm=()=>{
     f.reset();loadAdminProfiles()
   })
 }
+const wireSeed=()=>{
+  const btn=qs('#seedBtn');if(!btn) return
+  btn.addEventListener('click',async()=>{
+    const csrf=await ensureCsrf()
+    const r=await fetch('/api/admin/seed',{method:'POST',headers:{'x-csrf-token':csrf}})
+    if(r.ok){alert('测试数据已初始化');loadAdminProfiles()} else {const j=await r.json().catch(()=>({error:'失败'}));alert(j.error||'失败')}
+  })
+}
 const ensureEditModal=()=>{
   let m=qs('#editModal');if(m) return m
   m=document.createElement('div');m.id='editModal';m.className='modal';
@@ -130,4 +138,4 @@ const openEditModal=async (p)=>{
     m.classList.remove('show');loadAdminProfiles()
   }
 }
-(async()=>{if(await assertAdmin()){loadAdminProfiles();wireAdminForm()}})()
+(async()=>{if(await assertAdmin()){loadAdminProfiles();wireAdminForm();wireSeed()}})()
