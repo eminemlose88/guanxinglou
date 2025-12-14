@@ -5,6 +5,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
     "bcryptjs": "^2.4.3",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "@vercel/blob": "^0.24.0"
   }
 }

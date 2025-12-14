@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   tags text[] default '{}',
   bio text default '',
   published boolean default false,
+  avatar_url text,
   owner uuid default auth.uid(),
   created_at timestamp with time zone default now()
 );

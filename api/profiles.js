@@ -33,7 +33,7 @@ export default async function handler(req,res){
       }
     }
     if(!authed){res.status(401).json({error:'Unauthorized'});return}
-    const { data, error } = await sb.from('profiles').select('id,name,city,age,tags,bio,published').eq('published',true).order('created_at',{ascending:false})
+    const { data, error } = await sb.from('profiles').select('id,name,city,age,tags,bio,published,avatar_url').eq('published',true).order('created_at',{ascending:false})
     if(error){res.status(500).json({error:error.message});return}
     res.status(200).json({data})
     return
@@ -41,7 +41,7 @@ export default async function handler(req,res){
   if(req.method==='POST'){
     const body=req.body||{}
     const payload={
-      name:body.name,city:body.city,age:body.age,tags:body.tags||[],bio:body.bio||'',published:!!body.published
+      name:body.name,city:body.city,age:body.age,tags:body.tags||[],bio:body.bio||'',published:!!body.published,avatar_url: body.avatar_url||null
     }
     const { data, error } = await sb.from('profiles').insert(payload).select('*').single()
     if(error){res.status(400).json({error:error.message});return}
