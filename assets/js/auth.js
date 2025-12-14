@@ -21,7 +21,7 @@ const ensureSDKLoaded=async()=>{
 }
 const normalizeEmail=e=>String(e||'').trim().toLowerCase()
 const getCookie=(name)=>document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.split('=')[1]||''
-const ensureCsrf=async()=>{const c=getCookie('csrf_token');if(c)return c;try{const r=await fetch('/api/auth/csrf',{method:'GET'});const j=await r.json();return j.token||''}catch{return ''}}
+const ensureCsrf=async()=>{const c=getCookie('csrf_token');if(c)return c;try{const r=await fetch('/api/auth/csrf',{method:'GET',credentials:'include'});const j=await r.json();return j.token||''}catch{return ''}}
 const hasLocalSession=()=>{
   try{const t=localStorage.getItem(AUTH_KEY);return !!t}catch{return false}
 }
