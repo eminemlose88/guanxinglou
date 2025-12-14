@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
-import { encrypt, buildCookie } from '../_lib/secure'
 
 const pick=(...keys)=>{for(const k of keys){const v=process.env[k];if(v) return v}return ''}
 const sanitize=s=>String(s||'').trim().replace(/`/g,'')
-const secret=process.env.SUPABASE_JWT_SECRET||process.env.AUTH_COOKIE_SECRET||'changeme'
+const buildCookie=(name,value,opts={})=>{
+  const parts=[`${name}=${encodeURIComponent(value)}`]
+  if(opts.maxAge!=null) parts.push(`Max-Age=${opts.maxAge}`)
+  if(opts.path) parts.push(`Path=${opts.path}`)
+  if(opts.httpOnly) parts.push('HttpOnly')
+  if(opts.secure) parts.push('Secure')
+  if(opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+  return parts.join('; ')
+}
 
 export default async function handler(req,res){
   if(req.method!=='POST'){res.setHeader('Allow','POST');res.status(405).end('Method Not Allowed');return}
@@ -32,11 +39,9 @@ export default async function handler(req,res){
   }
 
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
-  let role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
-  const now=Date.now()
-  const exp=now+30*24*60*60*1000
-  const token=encrypt({ uid, email, role, ts: now, exp }, secret)
-  const cookie=buildCookie('auth_token', token, { httpOnly:true, secure:true, path:'/', maxAge:30*24*60*60, sameSite:'Lax' })
+  const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
+  const sessionToken=(req.headers.authorization||'').replace(/^Bearer\s+/,'')
+  const cookie=buildCookie('sb_token', sessionToken, { httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax' })
   res.setHeader('Set-Cookie', cookie)
   res.status(200).json({ user_name: email, role })
 }

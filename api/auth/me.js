@@ -1,20 +1,42 @@
-import { decrypt, parseCookies, buildCookie, encrypt } from '../_lib/secure'
+import { createClient } from '@supabase/supabase-js'
 
-const secret=process.env.SUPABASE_JWT_SECRET||process.env.AUTH_COOKIE_SECRET||'changeme'
+const buildCookie=(name,value,opts={})=>{
+  const parts=[`${name}=${encodeURIComponent(value)}`]
+  if(opts.maxAge!=null) parts.push(`Max-Age=${opts.maxAge}`)
+  if(opts.path) parts.push(`Path=${opts.path}`)
+  if(opts.httpOnly) parts.push('HttpOnly')
+  if(opts.secure) parts.push('Secure')
+  if(opts.sameSite) parts.push(`SameSite=${opts.sameSite}`)
+  return parts.join('; ')
+}
 
-export default function handler(req,res){
+const parseCookies=(cookieHeader)=>{
+  const out={}
+  String(cookieHeader||'').split(';').forEach(p=>{const [k,...rest]=p.trim().split('=');if(!k)return;out[k]=decodeURIComponent(rest.join('='))})
+  return out
+}
+
+export default async function handler(req,res){
   const cookies=parseCookies(req.headers.cookie)
-  const raw=cookies['auth_token']
-  const payload=decrypt(raw,secret)
-  const now=Date.now()
-  if(!payload||!payload.exp||payload.exp<now){
-    res.setHeader('Set-Cookie', buildCookie('auth_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax' }))
+  const raw=cookies['sb_token']
+  const url=process.env.SUPABASE_URL
+  const anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_ANON_KEY
+  if(!raw||!url||!anon){
+    res.setHeader('Set-Cookie', buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax' }))
     res.status(401).json({ error:'Unauthorized' })
     return
   }
-  const newExp=now+30*24*60*60*1000
-  const next=encrypt({ uid: payload.uid, email: payload.email, role: payload.role||'user', ts: payload.ts||now, exp: newExp }, secret)
-  const refreshed=buildCookie('auth_token', next, { path:'/', maxAge:30*24*60*60, httpOnly:true, secure:true, sameSite:'Lax' })
-  res.setHeader('Set-Cookie', refreshed)
-  res.status(200).json({ uid: payload.uid, user_name: payload.email, role: payload.role||'user' })
+  const sb=createClient(url,anon)
+  const { data, error } = await sb.auth.getUser(raw)
+  if(error||!data?.user){
+    res.setHeader('Set-Cookie', buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax' }))
+    res.status(401).json({ error:'Unauthorized' })
+    return
+  }
+  const email=data.user.email||''
+  const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
+  const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
+  // refresh cookie TTL
+  res.setHeader('Set-Cookie', buildCookie('sb_token', raw, { path:'/', maxAge:7*24*60*60, httpOnly:true, secure:true, sameSite:'Lax' }))
+  res.status(200).json({ uid: data.user.id, user_name: email, role })
 }
