@@ -17,7 +17,15 @@ const parseCookies=(cookieHeader)=>{
   return out
 }
 
-const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
+const buildAllDomainCookies=(name,value,req,baseOpts={})=>{
+  const host=(req.headers.host||'').toLowerCase().split(':')[0]
+  const apex='all-hands-ai.org'
+  const core={ httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax' }
+  const a=buildCookie(name,value,{...core, ...baseOpts, domain: apex})
+  const b=buildCookie(name,value,{...core, ...baseOpts})
+  const c=host?buildCookie(name,value,{...core, ...baseOpts, domain: host.replace(/^www\./,'') }):b
+  return [a,b,c]
+}
 export default async function handler(req,res){
   const cookies=parseCookies(req.headers.cookie)
   const raw=cookies['sb_token']
@@ -39,7 +47,7 @@ export default async function handler(req,res){
   const display=(data.user.user_metadata&&data.user.user_metadata.display_name)||email.split('@')[0]||email
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
-  // refresh cookie TTL scoped to primary domain
-  res.setHeader('Set-Cookie', buildCookie('sb_token', raw, { path:'/', maxAge:7*24*60*60, httpOnly:true, secure:true, sameSite:'Lax', domain: domainFromReq(req) }))
+  // refresh cookie TTL across apex/host
+  res.setHeader('Set-Cookie', buildAllDomainCookies('sb_token', raw, req))
   res.status(200).json({ uid: data.user.id, user_name: display, role })
 }

@@ -13,6 +13,15 @@ const buildCookie=(name,value,opts={})=>{
   return parts.join('; ')
 }
 const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
+const buildAllDomainCookies=(name,value,req,baseOpts={})=>{
+  const host=(req.headers.host||'').toLowerCase().split(':')[0]
+  const apex='all-hands-ai.org'
+  const core={ httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax' }
+  const a=buildCookie(name,value,{...core, ...baseOpts, domain: apex})
+  const b=buildCookie(name,value,{...core, ...baseOpts})
+  const c=host?buildCookie(name,value,{...core, ...baseOpts, domain: host.replace(/^www\./,'') }):b
+  return [a,b,c]
+}
 
 export default async function handler(req,res){
   if(req.method!=='POST'){res.setHeader('Allow','POST');res.status(405).end('Method Not Allowed');return}
@@ -43,7 +52,7 @@ export default async function handler(req,res){
   const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   const role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
   const sessionToken=(req.headers.authorization||'').replace(/^Bearer\s+/,'')
-  const cookie=buildCookie('sb_token', sessionToken, { httpOnly:true, secure:true, path:'/', maxAge:7*24*60*60, sameSite:'Lax', domain: domainFromReq(req) })
-  res.setHeader('Set-Cookie', cookie)
+  const cookies=buildAllDomainCookies('sb_token', sessionToken, req)
+  res.setHeader('Set-Cookie', cookies)
   res.status(200).json({ user_name: email, role })
 }

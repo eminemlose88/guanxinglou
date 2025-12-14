@@ -13,7 +13,13 @@ export default function handler(req,res){
     if(opts.domain) parts.push(`Domain=${opts.domain}`)
     return parts.join('; ')
   }
-  const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
-  res.setHeader('Set-Cookie', buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax', domain: domainFromReq(req) }))
+  const host=(req.headers.host||'').toLowerCase().split(':')[0]
+  const apex='all-hands-ai.org'
+  const cookies=[
+    buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax', domain: apex }),
+    buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax' }),
+    host?buildCookie('sb_token','', { path:'/', maxAge:0, httpOnly:true, secure:true, sameSite:'Lax', domain: host.replace(/^www\./,'') }):''
+  ].filter(Boolean)
+  res.setHeader('Set-Cookie', cookies)
   res.status(200).json({ ok:true })
 }

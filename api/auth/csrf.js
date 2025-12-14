@@ -9,12 +9,18 @@ export default function handler(req,res){
     if(opts.domain) parts.push(`Domain=${opts.domain}`)
     return parts.join('; ')
   }
-  const domainFromReq=(req)=>{const h=(req.headers.host||'').toLowerCase().split(':')[0];return h.replace(/^www\./,'')||'all-hands-ai.org'}
   try{
     const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)
     res.setHeader('Content-Type','application/json; charset=utf-8')
     res.setHeader('Cache-Control','no-store')
-    res.setHeader('Set-Cookie', buildCookie('csrf_token', token, { path:'/', maxAge:86400, sameSite:'Lax', domain: domainFromReq(req) }))
+    const host=(req.headers.host||'').toLowerCase().split(':')[0]
+    const apex='all-hands-ai.org'
+    const cookies=[
+      buildCookie('csrf_token', token, { path:'/', maxAge:86400, sameSite:'Lax', domain: apex }),
+      buildCookie('csrf_token', token, { path:'/', maxAge:86400, sameSite:'Lax' }),
+      host?buildCookie('csrf_token', token, { path:'/', maxAge:86400, sameSite:'Lax', domain: host.replace(/^www\./,'') }):''
+    ].filter(Boolean)
+    res.setHeader('Set-Cookie', cookies)
     res.status(200).end(JSON.stringify({ token }))
   }catch(e){
     res.setHeader('Content-Type','application/json; charset=utf-8')
