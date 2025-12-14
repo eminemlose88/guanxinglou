@@ -14,7 +14,6 @@ export default async function handler(req,res){
   const url=sanitize(pick('SUPABASE_URL','NEXT_PUBLIC_SUPABASE_URL'))
   const anon=sanitize(pick('SUPABASE_ANON_KEY','NEXT_PUBLIC_SUPABASE_ANON_KEY','SUPABASE_PUBLISHABLE_KEY','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'))
   const sb=createClient(url,anon)
-  const srv=createClient(url,pick('SUPABASE_SERVICE_ROLE_KEY'))
 
   const auth=req.headers.authorization||''
   let uid='',email=''
@@ -32,17 +31,8 @@ export default async function handler(req,res){
     uid=data.user.id;email=data.user.email||em
   }
 
-  let role='user'
-  if(srv){
-    const { data:ud } = await srv.from('users').select('role').eq('supabase_uid',uid).limit(1)
-    if(Array.isArray(ud)&&ud[0]?.role){
-      role=ud[0].role
-    } else {
-      const uname=(email||'').split('@')[0]
-      const { data:created } = await srv.from('users').upsert({ supabase_uid: uid, email, username: uname, status:'active' },{ onConflict:'supabase_uid' }).select('role').limit(1)
-      if(Array.isArray(created)&&created[0]?.role) role=created[0].role
-    }
-  }
+  const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
+  let role=allow.includes(String(email||'').toLowerCase())?'admin':'user'
   const now=Date.now()
   const exp=now+30*24*60*60*1000
   const token=encrypt({ uid, email, role, ts: now, exp }, secret)

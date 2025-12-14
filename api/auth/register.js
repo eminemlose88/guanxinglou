@@ -23,7 +23,6 @@ export default async function handler(req,res){
   const username=sanitize(body.username)
   const email=sanitize(body.email).toLowerCase()
   const password=String(body.password||'')
-  const supabase_uid=sanitize(body.supabase_uid)
   const user_agent=String(body.user_agent||'')
   const ip=(req.headers['x-forwarded-for']||'').toString().split(',')[0]||req.socket.remoteAddress||''
 
@@ -31,26 +30,27 @@ export default async function handler(req,res){
   if(!/^\S+@\S+\.\S+$/.test(email)){res.status(400).json({error:'Invalid email'});return}
   if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)){res.status(400).json({error:'Weak password'});return}
 
-  const { data:existsByName } = await sb.from('users').select('user_id').eq('username',username).limit(1)
-  if(existsByName && existsByName.length){res.status(409).json({error:'用户名已存在'});return}
-  const { data:existsByEmail } = await sb.from('users').select('user_id').eq('email',email).limit(1)
-  if(existsByEmail && existsByEmail.length){res.status(409).json({error:'邮箱已存在'});return}
+  const { data:existsAuthList } = await sb.auth.admin.listUsers({ page:1, perPage:200 })
+  const existsAuth=(existsAuthList?.users||[]).find(u=>String(u.email||'').toLowerCase()===email)
+  if(existsAuth){res.status(409).json({error:'邮箱已存在'});return}
 
   const salt=bcrypt.genSaltSync(10)
   const hash=bcrypt.hashSync(password,salt)
+  const { data:authCreated, error:authErr } = await sb.auth.admin.createUser({ email, password, email_confirmed: true })
+  if(authErr){res.status(400).json({error:authErr.message});return}
+  const supabase_uid=authCreated?.user?.id||''
   const now=new Date().toISOString()
-
   const { data, error } = await sb.from('users').insert({
     username,
     email,
     password_hash: hash,
-    role: 'user',
     created_at: now,
     updated_at: now,
     status: 'active',
     supabase_uid,
     register_ip: ip,
-    device_info: { user_agent }
+    device_info: { user_agent },
+    role: 'user'
   }).select('user_id').single()
   if(error){res.status(400).json({error:error.message});return}
 

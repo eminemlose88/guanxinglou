@@ -44,19 +44,24 @@ const wireSupabaseLogin=()=>{
     try{
       if(sb){
         const {data, error}=await sb.auth.signInWithPassword({email,password})
-        if(error){msg.textContent=error.message;alert(error.message);return}
+        if(error){
+          try{
+            const r=await fetch('/api/auth/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+            if(r.ok){const j=await r.json();msg.textContent=j.exists?'密码错误':'找不到邮箱'} else {msg.textContent='密码错误'}
+          }catch{msg.textContent='密码错误'}
+          return
+        }
         const csrf=await ensureCsrf()
-        if(!csrf){msg.textContent='安全初始化失败，请刷新后重试';alert('安全初始化失败，请刷新后重试');return}
+        if(!csrf){msg.textContent='密码错误';return}
         const resp=await fetch('/api/auth/login',{method:'POST',headers:{'x-csrf-token':csrf,Authorization:`Bearer ${data.session?.access_token||''}`},credentials:'include'})
-        if(!resp.ok){const j=await resp.json().catch(()=>({error:'登录失败'}));msg.textContent=j.error||'登录失败';alert(j.error||'登录失败');return}
+        if(!resp.ok){msg.textContent='密码错误';return}
         const me=await fetch('/api/auth/me',{credentials:'include'})
-        if(me.status!==200){msg.textContent='会话验证失败';alert('会话验证失败');return}
-      }else{ msg.textContent='配置缺失，无法登录';alert('配置缺失，无法登录');return }
+        if(me.status!==200){msg.textContent='密码错误';return}
+      }else{ msg.textContent='找不到邮箱';return }
       msg.textContent='登陆成功，正在跳转…'
       setTimeout(()=>location.href='must-read.html',600)
     }catch(e){
-      msg.textContent='网络异常或服务器错误'
-      alert('网络异常或服务器错误')
+      msg.textContent='密码错误'
     }finally{
       btn && (btn.disabled=false,btn.classList.remove('disabled'),btn.textContent='登陆')
     }
