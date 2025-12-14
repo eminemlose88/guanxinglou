@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { parseCookies, decrypt } from '../_lib/secure'
 
 const getServiceClient=()=>{
   const url=process.env.SUPABASE_URL
@@ -7,11 +6,18 @@ const getServiceClient=()=>{
   if(!url||!key) return null
   return createClient(url,key)
 }
-const verifyAuth=(req)=>{
-  const cookies=parseCookies(req.headers.cookie)
-  const raw=cookies['auth_token']
-  const payload=decrypt(raw,process.env.SUPABASE_JWT_SECRET||process.env.AUTH_COOKIE_SECRET||'changeme')
-  return !!(payload&&payload.exp>Date.now()&&payload.role==='admin')
+const parseCookies=(cookieHeader)=>{const out={};String(cookieHeader||'').split(';').forEach(p=>{const [k,...rest]=p.trim().split('=');if(!k)return;out[k]=decodeURIComponent(rest.join('='))});return out}
+const verifyAuth=async(req)=>{
+  try{
+    const token=parseCookies(req.headers.cookie)['sb_token'];const url=process.env.SUPABASE_URL;const anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_ANON_KEY
+    if(!token||!url||!anon) return false
+    const sb=createClient(url,anon)
+    const { data, error } = await sb.auth.getUser(token)
+    if(error||!data?.user) return false
+    const email=data.user.email||''
+    const allow=(process.env.SUPABASE_ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
+    return allow.includes(String(email||'').toLowerCase())
+  }catch{return false}
 }
 const verifyCsrf=(req)=>{
   const token=req.headers['x-csrf-token']
@@ -21,7 +27,7 @@ const verifyCsrf=(req)=>{
 
 export default async function handler(req,res){
   const sb=getServiceClient();if(!sb){res.status(500).json({error:'Service not configured'});return}
-  if(!verifyAuth(req)){res.status(401).json({error:'Unauthorized'});return}
+  if(!(await verifyAuth(req))){res.status(401).json({error:'Unauthorized'});return}
   if(req.method==='GET'){
     const { data, error } = await sb.from('profiles').select('id,name,city,age,tags,bio,published,avatar_url').order('created_at',{ascending:false})
     if(error){res.status(500).json({error:error.message});return}

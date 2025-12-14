@@ -30,15 +30,11 @@ export default async function handler(req,res){
   if(!/^\S+@\S+\.\S+$/.test(email)){res.status(400).json({error:'Invalid email'});return}
   if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)){res.status(400).json({error:'Weak password'});return}
 
-  const { data:existsAuthList } = await sb.auth.admin.listUsers({ page:1, perPage:200 })
-  const existsAuth=(existsAuthList?.users||[]).find(u=>String(u.email||'').toLowerCase()===email)
-  if(existsAuth){res.status(409).json({error:'邮箱已存在'});return}
+  // 前端已执行 signUp，并由 Supabase 发送验证邮件；此处仅维护业务表
 
   const salt=bcrypt.genSaltSync(10)
   const hash=bcrypt.hashSync(password,salt)
-  const { data:authCreated, error:authErr } = await sb.auth.admin.createUser({ email, password, email_confirmed: true })
-  if(authErr){res.status(400).json({error:authErr.message});return}
-  const supabase_uid=authCreated?.user?.id||''
+  const supabase_uid=sanitize(body.supabase_uid)
   const now=new Date().toISOString()
   const { data, error } = await sb.from('users').insert({
     username,
@@ -55,5 +51,5 @@ export default async function handler(req,res){
   if(error){res.status(400).json({error:error.message});return}
 
   res.setHeader('Set-Cookie', buildCookie('csrf_token', csrfHeader, { path:'/', maxAge:86400, sameSite:'Lax' }))
-  res.status(201).json({ user_id: data.user_id })
+  res.status(201).json({ ok:true, user_id: data.user_id })
 }

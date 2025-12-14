@@ -1,6 +1,6 @@
 const qs=s=>document.querySelector(s)
 const normalizeEmail=e=>String(e||'').trim().toLowerCase()
-const ensureCsrf=async()=>{try{const r=await fetch('/api/auth/csrf',{method:'POST'});const j=await r.json();return j.token||''}catch{return ''}}
+const ensureCsrf=async()=>{try{const r=await fetch('/api/auth/csrf',{method:'GET',credentials:'include'});const j=await r.json();return j.token||''}catch{return ''}}
 const strongPassword=p=>/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(p)
 const wireRegister=()=>{
   const f=qs('#registerForm');if(!f)return

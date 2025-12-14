@@ -37,6 +37,7 @@ const renderUserMenu=(name)=>{
     <div class="dropdown">
       <button id="editUsernameBtn" class="btn ghost">修改昵称</button>
       <button id="editPasswordBtn" class="btn ghost">修改密码</button>
+      <button id="editEmailBtn" class="btn ghost">修改邮箱</button>
       <a id="logoutLink" class="btn" href="#">退出登录</a>
     </div>`
   menu.appendChild(wrap)
@@ -51,6 +52,17 @@ const renderUserMenu=(name)=>{
   }
   qs('#editUsernameBtn').addEventListener('click',()=>wireUpdate('username'))
   qs('#editPasswordBtn').addEventListener('click',()=>wireUpdate('password'))
+  qs('#editEmailBtn').addEventListener('click',async()=>{
+    const val=prompt('输入新的邮箱地址');if(!val) return
+    if(!/^\S+@\S+\.\S+$/.test(val)){alert('邮箱格式不正确');return}
+    if(!confirm('将发送验证邮件到新邮箱，完成验证后正式生效。继续？')) return
+    const csrf=await ensureCsrfMain()
+    const r=await fetch('/api/auth/email',{method:'POST',headers:{'Content-Type':'application/json','x-csrf-token':csrf},credentials:'include',body:JSON.stringify({email:val})})
+    if(r.ok){
+      alert('已发送验证邮件到新邮箱，请在24小时内完成验证')
+      await fetch('/api/auth/resend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'email_change',email:val})})
+    }else{const j=await r.json().catch(()=>({error:'修改失败'}));alert(j.error||'修改失败')}
+  })
   const logout=qs('#logoutLink');logout.addEventListener('click',async e=>{e.preventDefault();const csrf=await ensureCsrfMain();await fetch('/api/auth/logout',{method:'POST',headers:{'x-csrf-token':csrf},credentials:'include'});location.href='login.html'})
 }
 const initUserMenu=async()=>{

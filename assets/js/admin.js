@@ -1,5 +1,5 @@
 const qs=s=>document.querySelector(s)
-const ensureCsrf=async()=>{try{const r=await fetch('/api/auth/csrf',{method:'POST'});const j=await r.json();return j.token||''}catch{return ''}}
+const ensureCsrf=async()=>{try{const r=await fetch('/api/auth/csrf',{method:'GET',credentials:'include'});const j=await r.json();return j.token||''}catch{return ''}}
 const toTags=s=>s.split(',').map(x=>x.trim()).filter(Boolean)
 const renderAdminProfiles=items=>{
   const wrap=qs('#adminProfiles');if(!wrap) return

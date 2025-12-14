@@ -1,6 +1,6 @@
 const qs=s=>document.querySelector(s)
 const getCookie=(name)=>document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.split('=')[1]||''
-const ensureCsrf=async()=>{const c=getCookie('csrf_token');if(c)return c;try{const r=await fetch('/api/auth/csrf',{method:'POST'});const j=await r.json();return j.token||''}catch{return ''}}
+const ensureCsrf=async()=>{const c=getCookie('csrf_token');if(c)return c;try{const r=await fetch('/api/auth/csrf',{method:'GET',credentials:'include'});const j=await r.json();return j.token||''}catch{return ''}}
 const wirePromote=()=>{
   const btn=qs('#promoteBtn');const msg=qs('#promoteMsg');if(!btn)return
   btn.addEventListener('click',async()=>{
