@@ -17,25 +17,29 @@ create table if not exists public.profiles (
 alter table public.profiles enable row level security;
 
 -- RLS: allow read of published profiles to all authenticated users
-create policy if not exists "read_published_profiles"
+drop policy if exists "read_published_profiles" on public.profiles;
+create policy "read_published_profiles"
 on public.profiles for select
 to authenticated
 using (published = true);
 
 -- RLS: allow owners to read their own profiles
-create policy if not exists "read_own_profiles"
+drop policy if exists "read_own_profiles" on public.profiles;
+create policy "read_own_profiles"
 on public.profiles for select
 to authenticated
 using (owner = auth.uid());
 
 -- RLS: allow owners to insert their own profiles
-create policy if not exists "insert_own_profiles"
+drop policy if exists "insert_own_profiles" on public.profiles;
+create policy "insert_own_profiles"
 on public.profiles for insert
 to authenticated
 with check (owner = auth.uid());
 
 -- RLS: allow owners to update their own profiles
-create policy if not exists "update_own_profiles"
+drop policy if exists "update_own_profiles" on public.profiles;
+create policy "update_own_profiles"
 on public.profiles for update
 to authenticated
 using (owner = auth.uid())
@@ -56,7 +60,8 @@ create table if not exists public.users (
 );
 
 alter table public.users enable row level security;
-create policy if not exists "users_read_self"
+drop policy if exists "users_read_self" on public.users;
+create policy "users_read_self"
 on public.users for select
 to authenticated
 using (supabase_uid = auth.uid());
@@ -72,8 +77,11 @@ create table if not exists public.business_owners (
   updated_at timestamp with time zone default now()
 );
 alter table public.business_owners enable row level security;
-create policy if not exists "owners_read_self"
-on public.business_owners for select to authenticated using (
+drop policy if exists "owners_read_self" on public.business_owners;
+create policy "owners_read_self"
+on public.business_owners for select
+to authenticated
+using (
   (select supabase_uid from public.users where public.users.user_id = public.business_owners.owner_id) = auth.uid()
 );
 
@@ -88,7 +96,10 @@ create table if not exists public.female_users (
   updated_at timestamp with time zone default now()
 );
 alter table public.female_users enable row level security;
-create policy if not exists "female_read_self"
-on public.female_users for select to authenticated using (
+drop policy if exists "female_read_self" on public.female_users;
+create policy "female_read_self"
+on public.female_users for select
+to authenticated
+using (
   (select supabase_uid from public.users where public.users.user_id = public.female_users.user_id) = auth.uid()
 );
