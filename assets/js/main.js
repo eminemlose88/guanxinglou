@@ -17,7 +17,7 @@ const wireFilters=()=>{['#filterCity','#filterTag','#filterSearch'].forEach(s=>{
 const loadProfiles=async()=>{
   const wrap=qs('#profiles');if(!wrap)return
   try{
-    const res=await fetch('/api/profiles',{credentials:'include'})
+    const res=await fetch('/api/profiles')
     if(res.ok){const json=await res.json();profiles=(json.data||[]).map(p=>({name:p.name,city:p.city,age:p.age,tags:p.tags,bio:p.bio,avatar_url:p.avatar_url}))}
   }catch(e){profiles=[]}
   renderFilters();renderProfiles()
