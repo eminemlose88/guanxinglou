@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>登陆｜观星楼</title>
+  <title>注册｜观星楼</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -16,40 +16,48 @@
         <a href="selection.html">选妃</a>
         <a href="about.html">关于我们</a>
         <a href="contact.html">联系我们</a>
+        <a class="btn" href="login.html">登陆</a>
       </nav>
     </div>
   </header>
   <main>
     <section class="section container narrow">
       <div class="section-head center">
-        <h2>登陆</h2>
-        <span>精英通道</span>
+        <h2>注册</h2>
+        <span>创建你的尊享账号</span>
       </div>
-      <form id="loginForm" class="form">
+      <form id="registerForm" class="form">
+        <label class="field">
+          <span>用户名</span>
+          <input type="text" name="username" placeholder="至少4位字母数字" required>
+        </label>
         <label class="field">
           <span>邮箱</span>
           <input type="email" name="email" placeholder="请输入邮箱地址" required>
         </label>
         <label class="field">
           <span>密码</span>
-          <input type="password" name="password" placeholder="至少6位" required>
+          <input type="password" name="password" placeholder="至少8位，包含大小写与数字" required>
         </label>
-        <button class="btn primary full" type="submit">登陆</button>
-        <div id="loginMsg" class="msg"></div>
+        <label class="field">
+          <span>确认密码</span>
+          <input type="password" name="confirm" placeholder="再次输入密码" required>
+        </label>
+        <button class="btn primary full" type="submit">注册</button>
+        <div id="registerMsg" class="msg"></div>
       </form>
-      <div class="cta-block"><a class="btn" href="register.html">没有账号？去注册</a></div>
     </section>
   </main>
   <footer class="footer">
     <div class="container footer-inner">
       <div>© <span id="year"></span> 观星楼</div>
-      <div class="legal">仅做社交配对与交流</div>
+      <div class="legal">合规与隐私优先，杜绝不当行为</div>
     </div>
   </footer>
   <script src="/api/config"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="assets/js/auth.js"></script>
-  <script>window.__auth&&__auth.wireSupabaseLogin()</script>
+  <script src="assets/js/register.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 </html>
