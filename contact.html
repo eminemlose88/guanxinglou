@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>联系我们｜观星楼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="index.html">观星楼</a>
+      <nav class="menu">
+        <a href="must-read.html">包养必看</a>
+        <a href="selection.html">选妃</a>
+        <a href="about.html">关于我们</a>
+        <a class="active" href="contact.html">联系我们</a>
+        <a class="btn" href="login.html">登陆</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero small">
+      <div class="hero-inner">
+        <h1 class="title">ReawakeR</h1>
+        <p class="subtitle">专属秘书一对一服务</p>
+      </div>
+    </section>
+    <section class="section container narrow">
+      <div class="section-head center">
+        <h2>联系表单</h2>
+        <span>Frontiers</span>
+      </div>
+      <form id="contactForm" class="form">
+        <label class="field">
+          <span>称呼</span>
+          <input type="text" name="name" placeholder="请输入称呼" required>
+        </label>
+        <label class="field">
+          <span>城市</span>
+          <input type="text" name="city" placeholder="所在城市" required>
+        </label>
+        <label class="field">
+          <span>联系方式</span>
+          <input type="tel" name="phone" placeholder="手机号或微信" required>
+        </label>
+        <label class="field">
+          <span>需求说明</span>
+          <textarea name="desc" placeholder="请描述你的需求" rows="4" required></textarea>
+        </label>
+        <button class="btn primary full" type="submit">提交</button>
+        <div id="contactMsg" class="msg"></div>
+      </form>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>© <span id="year"></span> 观星楼</div>
+      <div class="legal">表单信息只用于对接服务，不另作他用</div>
+    </div>
+  </footer>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

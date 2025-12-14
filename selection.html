@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>选妃｜观星楼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-protected>
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="index.html">观星楼</a>
+      <nav class="menu">
+        <a href="must-read.html">包养必看</a>
+        <a class="active" href="selection.html">选妃</a>
+        <a href="about.html">关于我们</a>
+        <a href="contact.html">联系我们</a>
+        <a class="btn" href="login.html">切换账户</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero small">
+      <div class="hero-inner">
+        <h1 class="title">The 10th S-rank</h1>
+        <p class="subtitle">城市精选，认证评价与私密对接</p>
+      </div>
+    </section>
+    <section class="section container">
+      <div class="section-head">
+        <h2>筛选</h2>
+        <span>Don't Look Down on My Guys</span>
+      </div>
+      <div class="filters">
+        <select id="filterCity"><option value="">全部城市</option></select>
+        <select id="filterTag"><option value="">全部标签</option></select>
+        <input id="filterSearch" type="text" placeholder="搜索昵称或简介">
+      </div>
+      <div id="profiles" class="card-grid profile-grid"></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>© <span id="year"></span> 观星楼</div>
+      <div class="legal">仅做社交配对与交流</div>
+    </div>
+  </footer>
+  <script src="/api/config"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
