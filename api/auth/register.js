@@ -44,6 +44,7 @@ export default async function handler(req,res){
     username,
     email,
     password_hash: hash,
+    role: 'user',
     created_at: now,
     updated_at: now,
     status: 'active',

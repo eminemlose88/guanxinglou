@@ -13,8 +13,8 @@ export default function handler(req,res){
     return
   }
   const newExp=now+30*24*60*60*1000
-  const next=encrypt({ uid: payload.uid, email: payload.email, ts: payload.ts||now, exp: newExp }, secret)
+  const next=encrypt({ uid: payload.uid, email: payload.email, role: payload.role||'user', ts: payload.ts||now, exp: newExp }, secret)
   const refreshed=buildCookie('auth_token', next, { path:'/', maxAge:30*24*60*60, httpOnly:true, secure:true, sameSite:'Lax' })
   res.setHeader('Set-Cookie', refreshed)
-  res.status(200).json({ uid: payload.uid, user_name: payload.email })
+  res.status(200).json({ uid: payload.uid, user_name: payload.email, role: payload.role||'user' })
 }

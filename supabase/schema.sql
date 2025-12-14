@@ -53,6 +53,7 @@ create table if not exists public.users (
   username text unique not null,
   email text unique not null,
   password_hash text not null,
+  role text default 'user',
   status text default 'active',
   register_ip text,
   device_info jsonb default '{}'::jsonb,

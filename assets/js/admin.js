@@ -41,6 +41,10 @@ const renderAdminProfiles=items=>{
     })
   })
 }
+const assertAdmin=async()=>{
+  try{const r=await fetch('/api/auth/me',{credentials:'include'});if(!r.ok){location.href='login.html';return false};const j=await r.json();if(j.role!=='admin'){location.href='selection.html';return false}}catch{location.href='login.html';return false}
+  return true
+}
 const loadAdminProfiles=async()=>{
   const res=await fetch('/api/admin/profiles')
   if(res.ok){const j=await res.json();renderAdminProfiles(j.data||[])}
@@ -126,4 +130,4 @@ const openEditModal=async (p)=>{
     m.classList.remove('show');loadAdminProfiles()
   }
 }
-loadAdminProfiles();wireAdminForm()
+(async()=>{if(await assertAdmin()){loadAdminProfiles();wireAdminForm()}})()

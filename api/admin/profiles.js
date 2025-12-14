@@ -11,7 +11,7 @@ const verifyAuth=(req)=>{
   const cookies=parseCookies(req.headers.cookie)
   const raw=cookies['auth_token']
   const payload=decrypt(raw,process.env.SUPABASE_JWT_SECRET||process.env.AUTH_COOKIE_SECRET||'changeme')
-  return !!(payload&&payload.exp>Date.now())
+  return !!(payload&&payload.exp>Date.now()&&payload.role==='admin')
 }
 const verifyCsrf=(req)=>{
   const token=req.headers['x-csrf-token']
