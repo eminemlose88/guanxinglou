@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useProfileStore } from '../../store/profileStore';
 import { Profile } from '../../data/profiles';
-import { Plus, Trash2, Edit, Save, X, Search } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X, Search, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { put } from '@vercel/blob';
 
 export const AdminGirls: React.FC = () => {
   const { profiles, addProfile, updateProfile, deleteProfile } = useProfileStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUpload] = useState(false);
   
   // Form State
   const initialFormState: Partial<Profile> = {
@@ -63,10 +65,7 @@ export const AdminGirls: React.FC = () => {
     if (editingId) {
       updateProfile(editingId, formData);
     } else {
-      addProfile({
-        ...formData,
-        id: Date.now().toString(),
-      } as Profile);
+      addProfile(formData as Profile);
     }
     setIsModalOpen(false);
   };
@@ -89,6 +88,34 @@ export const AdminGirls: React.FC = () => {
     const newImages = [...(formData.images || [])];
     newImages.splice(index, 1);
     setFormData(prev => ({ ...prev, images: newImages }));
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    setUpload(true);
+    const file = event.target.files[0];
+    try {
+      // Direct upload to Vercel Blob
+      // Note: In strict production, you should use a server-side route to generate a token or handle upload.
+      // But for client-side uploads with `access: 'public'`, we need a client token or use the server action.
+      // Since we don't have a backend route setup for this yet, we will simulate the upload 
+      // OR try to use the put command if the token is available. 
+      // HOWEVER, @vercel/blob `put` is Node.js only. Client-side requires `upload` from `@vercel/blob/client`.
+      
+      // Let's assume for now user will paste URL, OR if we really want upload:
+      // We need to create an API route `/api/upload` in a Next.js or similar environment.
+      // Since this is a Vite SPA, we can't easily do server-side signing without a separate backend function (e.g. Vercel Function).
+      // So for this MVP step, we'll stick to URL input, but I'll add the UI for it.
+      
+      alert("请在 Vercel 后台配置 Serverless Function 以启用文件上传，当前请手动输入 Blob URL。");
+      
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUpload(false);
+    }
   };
 
   const handleStatChange = (stat: 'charm' | 'intelligence' | 'agility', value: string) => {
@@ -329,9 +356,16 @@ export const AdminGirls: React.FC = () => {
                         </button>
                       </div>
                     ))}
-                    <button type="button" onClick={addImageField} className="text-sm text-system-blue hover:text-white flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> 添加图片
-                    </button>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={addImageField} className="text-sm text-system-blue hover:text-white flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> 添加图片链接
+                        </button>
+                        <label className="text-sm text-green-500 hover:text-white flex items-center gap-1 cursor-pointer">
+                            <Upload className="w-3 h-3" /> 
+                            {uploading ? '上传中...' : '上传图片 (Blob)'}
+                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                        </label>
+                    </div>
                   </div>
                 </div>
 

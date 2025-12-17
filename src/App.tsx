@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
 import { AdminLayout } from './layouts/AdminLayout';
@@ -14,8 +14,19 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminGirls } from './pages/admin/AdminGirls';
 import { AdminUsers } from './pages/admin/AdminUsers';
+import { useAuthStore } from './store/authStore';
+import { useProfileStore } from './store/profileStore';
 
 function App() {
+  const fetchUsers = useAuthStore((state) => state.fetchUsers);
+  const fetchProfiles = useProfileStore((state) => state.fetchProfiles);
+
+  useEffect(() => {
+    // Initial Data Load
+    fetchUsers();
+    fetchProfiles();
+  }, []);
+
   return (
     <Router>
       <Routes>
