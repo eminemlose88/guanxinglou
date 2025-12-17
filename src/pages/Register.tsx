@@ -11,11 +11,11 @@ export const Register: React.FC = () => {
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
     
-    const key = register(username);
+    const key = await register(username);
     setGeneratedKey(key);
   };
 

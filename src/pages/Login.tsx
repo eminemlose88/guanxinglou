@@ -14,9 +14,9 @@ export const Login: React.FC = () => {
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(selectedRank, password)) {
+    if (await login(selectedRank, password)) {
       navigate('/gallery');
     } else {
       setError(true);

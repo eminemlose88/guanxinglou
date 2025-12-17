@@ -11,9 +11,9 @@ export const AdminLogin: React.FC = () => {
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminLogin(password, secretKey)) {
+    if (await adminLogin(password, secretKey)) {
       navigate('/admin/dashboard');
     } else {
       setError(true);
