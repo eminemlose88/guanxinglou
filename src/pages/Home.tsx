@@ -56,14 +56,24 @@ export const Home: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.2 }}
               viewport={{ once: true }}
-              className="group relative h-[500px] overflow-hidden rounded-xl bg-abyss-light border border-white/5 hover:border-system-blue/50 transition-colors"
             >
-              {/* Image Placeholder */}
+            <Link
+              to={`/profile/${profile.id}`}
+              className="group relative h-[500px] overflow-hidden rounded-xl bg-abyss-light border border-white/5 hover:border-system-blue/50 transition-colors block"
+            >
+              {/* Image */}
               <div className="absolute inset-0 bg-gray-800">
-                 {/* Replace this div with an actual img tag later */}
-                 <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono text-sm">
-                    IMG_PLACEHOLDER_{profile.name.toUpperCase()}
-                 </div>
+                 {profile.images && profile.images.length > 0 ? (
+                   <img 
+                     src={profile.images[0]} 
+                     alt={profile.name} 
+                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                   />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-gray-600 font-mono text-sm">
+                      NO IMAGE
+                   </div>
+                 )}
               </div>
               
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90"></div>
@@ -81,6 +91,7 @@ export const Home: React.FC = () => {
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
+            </Link>
             </motion.div>
           ))}
         </div>
