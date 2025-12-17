@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { useProfileStore } from '../../store/profileStore';
 import { Profile } from '../../data/profiles';
-import { Plus, Trash2, Edit, Save, X, Search, Upload, Video } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X, Search, Upload, Video, Archive, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { upload } from '@vercel/blob/client';
 
 export const AdminGirls: React.FC = () => {
-  const { profiles, addProfile, updateProfile, deleteProfile } = useProfileStore();
+  const { profiles, addProfile, updateProfile, deleteProfile, restoreProfile, permanentlyDeleteProfile } = useProfileStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUpload] = useState(false);
   const [uploadingVideo, setUploadVideo] = useState(false);
+  const [viewMode, setViewMode] = useState<'active' | 'trash'>('active');
   
-  // Form State
+  // Filter profiles based on view mode
+  const activeProfiles = profiles.filter(p => !p.isDeleted);
+  const trashProfiles = profiles.filter(p => p.isDeleted);
+  const displayedProfiles = viewMode === 'active' ? activeProfiles : trashProfiles;
   const initialFormState: Partial<Profile> = {
     name: '',
     rank: 'B',
@@ -160,13 +164,32 @@ export const AdminGirls: React.FC = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">人员档案管理</h1>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-system-blue hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> 新增档案
-        </button>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-white">人员档案管理</h1>
+          <div className="flex bg-black/50 rounded-lg p-1 border border-white/10">
+            <button 
+              onClick={() => setViewMode('active')}
+              className={`px-3 py-1 text-xs rounded transition-all ${viewMode === 'active' ? 'bg-system-blue text-white shadow' : 'text-gray-500 hover:text-white'}`}
+            >
+              活跃 ({activeProfiles.length})
+            </button>
+            <button 
+              onClick={() => setViewMode('trash')}
+              className={`px-3 py-1 text-xs rounded transition-all flex items-center gap-1 ${viewMode === 'trash' ? 'bg-red-900/50 text-red-200 shadow border border-red-500/30' : 'text-gray-500 hover:text-red-400'}`}
+            >
+              <Trash2 className="w-3 h-3" /> 回收站 ({trashProfiles.length})
+            </button>
+          </div>
+        </div>
+        
+        {viewMode === 'active' && (
+          <button 
+            onClick={() => handleOpenModal()}
+            className="bg-system-blue hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> 新增档案
+          </button>
+        )}
       </div>
 
       <div className="bg-abyss-light border border-white/10 rounded-lg overflow-hidden">
@@ -182,7 +205,14 @@ export const AdminGirls: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {profiles.map((profile) => (
+            {displayedProfiles.length === 0 ? (
+               <tr>
+                 <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
+                   {viewMode === 'active' ? '暂无活跃档案' : '回收站为空'}
+                 </td>
+               </tr>
+            ) : (
+              displayedProfiles.map((profile) => (
               <tr key={profile.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-6 py-4 font-medium text-white">
                   {profile.name}
@@ -203,15 +233,28 @@ export const AdminGirls: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 font-mono text-system-blue">{profile.monthlyBudget || profile.shortTermBudget}</td>
                 <td className="px-6 py-4 text-right flex justify-end gap-3">
-                  <button onClick={() => handleOpenModal(profile)} className="text-blue-400 hover:text-white">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => deleteProfile(profile.id)} className="text-red-400 hover:text-white">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {viewMode === 'active' ? (
+                    <>
+                      <button onClick={() => handleOpenModal(profile)} className="text-blue-400 hover:text-white" title="编辑">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => deleteProfile(profile.id)} className="text-red-400 hover:text-white" title="移入回收站">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => restoreProfile(profile.id)} className="text-green-400 hover:text-white flex items-center gap-1 bg-green-900/20 px-2 py-1 rounded border border-green-500/20" title="恢复档案">
+                        <RefreshCw className="w-3 h-3" /> 恢复
+                      </button>
+                      <button onClick={() => { if(confirm('确定要永久删除该档案吗？此操作无法撤销！')) permanentlyDeleteProfile(profile.id) }} className="text-red-400 hover:text-white bg-red-900/20 px-2 py-1 rounded border border-red-500/20" title="彻底删除">
+                        <X className="w-3 h-3" /> 销毁
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </div>

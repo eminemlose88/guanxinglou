@@ -13,6 +13,8 @@ interface ProfileState {
   addProfile: (profile: Omit<Profile, 'id'>) => Promise<void>;
   updateProfile: (id: string, updatedProfile: Partial<Profile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
+  restoreProfile: (id: string) => Promise<void>;
+  permanentlyDeleteProfile: (id: string) => Promise<void>;
   getProfile: (id: string) => Profile | undefined;
 }
 
@@ -40,6 +42,7 @@ export const useProfileStore = create<ProfileState>()(
 
         set({ loading: true });
         try {
+          // Fetch ALL profiles including deleted ones, let frontend filter
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -85,7 +88,8 @@ export const useProfileStore = create<ProfileState>()(
               price: p.price,
               images: p.images,
               videos: p.videos,
-              availability: p.availability
+              availability: p.availability,
+              isDeleted: p.is_deleted
             }));
             set({ profiles: mappedProfiles, loading: false, lastFetched: now });
           }
@@ -132,7 +136,8 @@ export const useProfileStore = create<ProfileState>()(
         price: profile.price,
         images: profile.images,
         videos: profile.videos,
-        availability: profile.availability
+        availability: profile.availability,
+        is_deleted: false
       };
 
       const { data, error } = await supabase
@@ -145,13 +150,13 @@ export const useProfileStore = create<ProfileState>()(
       if (data) {
          // Map back the ID and snake_case result to camelCase (or just use local profile with new ID)
          // For simplicity, reconstruct from input + id
-        const newProfile = { ...profile, id: data.id } as Profile;
+        const newProfile = { ...profile, id: data.id, isDeleted: false } as Profile;
         set((state) => ({ profiles: [newProfile, ...state.profiles] }));
       }
     } catch (err: any) {
       console.error('Error adding profile:', err);
       // Optimistic update for demo even if DB fails
-      const newProfile = { ...profile, id: Date.now().toString() } as Profile;
+      const newProfile = { ...profile, id: Date.now().toString(), isDeleted: false } as Profile;
       set((state) => ({ profiles: [newProfile, ...state.profiles] }));
     }
   },
@@ -215,6 +220,49 @@ export const useProfileStore = create<ProfileState>()(
 
   deleteProfile: async (id) => {
     try {
+      // Soft delete
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_deleted: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        profiles: state.profiles.map((p) => (p.id === id ? { ...p, isDeleted: true } : p)),
+      }));
+    } catch (err: any) {
+      console.error('Error soft deleting profile:', err);
+      // Optimistic update
+      set((state) => ({
+        profiles: state.profiles.map((p) => (p.id === id ? { ...p, isDeleted: true } : p)),
+      }));
+    }
+  },
+
+  restoreProfile: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_deleted: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        profiles: state.profiles.map((p) => (p.id === id ? { ...p, isDeleted: false } : p)),
+      }));
+    } catch (err: any) {
+      console.error('Error restoring profile:', err);
+      // Optimistic update
+      set((state) => ({
+        profiles: state.profiles.map((p) => (p.id === id ? { ...p, isDeleted: false } : p)),
+      }));
+    }
+  },
+
+  permanentlyDeleteProfile: async (id) => {
+    try {
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -226,7 +274,7 @@ export const useProfileStore = create<ProfileState>()(
         profiles: state.profiles.filter((p) => p.id !== id),
       }));
     } catch (err: any) {
-      console.error('Error deleting profile:', err);
+      console.error('Error permanently deleting profile:', err);
       // Optimistic delete
       set((state) => ({
         profiles: state.profiles.filter((p) => p.id !== id),

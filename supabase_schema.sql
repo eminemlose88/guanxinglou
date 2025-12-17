@@ -59,6 +59,7 @@ create table profiles (
   images text[], -- Array of image URLs from Vercel Blob
   videos text[], -- Array of video URLs from Vercel Blob
   availability text check (availability in ('Available', 'On Mission', 'Resting')) default 'Available',
+  is_deleted boolean default false,
   
   created_at timestamptz default now()
 );

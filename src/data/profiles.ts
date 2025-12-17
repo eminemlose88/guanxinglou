@@ -51,6 +51,7 @@ export interface Profile {
   images: string[];
   videos?: string[]; // Optional video array
   availability: 'Available' | 'On Mission' | 'Resting';
+  isDeleted?: boolean;
 }
 
 export const profiles: Profile[] = [
@@ -88,7 +89,8 @@ export const profiles: Profile[] = [
     price: '100,000 RMB/月',
     images: ['/placeholders/seraphina.jpg'],
     videos: [],
-    availability: 'Available'
+    availability: 'Available',
+    isDeleted: false
   },
   {
     id: '2',
