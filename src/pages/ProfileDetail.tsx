@@ -70,15 +70,25 @@ export const ProfileDetail: React.FC = () => {
             transition={{ delay: 0.1 }}
             className="max-w-3xl mx-auto space-y-8"
         >
-            {/* 0. Photo Gallery */}
-            {profile.images && profile.images.length > 1 && (
+            {/* 0. Photo & Video Gallery */}
+            {( (profile.images && profile.images.length > 1) || (profile.videos && profile.videos.length > 0) ) && (
               <section>
                  <h3 className="text-system-blue font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                   <Star className="w-4 h-4" /> 照片墙
+                   <Star className="w-4 h-4" /> 影像资料
                  </h3>
                  <div className="grid grid-cols-3 gap-2">
-                   {profile.images.slice(1).map((img, idx) => (
-                     <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50">
+                   {/* Videos */}
+                   {profile.videos?.map((vid, idx) => (
+                     <div key={`vid-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50 group relative">
+                        <video src={vid} controls className="w-full h-full object-cover" />
+                        <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-[10px] text-white flex items-center gap-1">
+                             Video
+                        </div>
+                     </div>
+                   ))}
+                   {/* Images */}
+                   {profile.images?.slice(1).map((img, idx) => (
+                     <div key={`img-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50">
                         <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
                      </div>
                    ))}

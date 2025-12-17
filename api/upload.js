@@ -9,7 +9,10 @@ export default async function handler(request, response) {
       request,
       onBeforeGenerateToken: async (pathname) => {
         return {
-          allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+          allowedContentTypes: [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm', 'video/quicktime'
+          ],
           tokenPayload: JSON.stringify({
             // optional payload
           }),

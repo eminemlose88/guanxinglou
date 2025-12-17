@@ -66,6 +66,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           stats: p.stats,
           price: p.price,
           images: p.images,
+          videos: p.videos,
           availability: p.availability
         }));
         set({ profiles: mappedProfiles, loading: false });
@@ -112,6 +113,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         stats: profile.stats,
         price: profile.price,
         images: profile.images,
+        videos: profile.videos,
         availability: profile.availability
       };
 
@@ -171,6 +173,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       if (updatedProfile.stats) dbUpdate.stats = updatedProfile.stats;
       if (updatedProfile.price) dbUpdate.price = updatedProfile.price;
       if (updatedProfile.images) dbUpdate.images = updatedProfile.images;
+      if (updatedProfile.videos) dbUpdate.videos = updatedProfile.videos;
       if (updatedProfile.availability) dbUpdate.availability = updatedProfile.availability;
 
       const { error } = await supabase

@@ -49,6 +49,7 @@ export interface Profile {
   };
   price: string; // Display price (summary)
   images: string[];
+  videos?: string[]; // Optional video array
   availability: 'Available' | 'On Mission' | 'Resting';
 }
 
@@ -86,6 +87,7 @@ export const profiles: Profile[] = [
     stats: { charm: 98, intelligence: 95, agility: 80 },
     price: '100,000 RMB/月',
     images: ['/placeholders/seraphina.jpg'],
+    videos: [],
     availability: 'Available'
   },
   {

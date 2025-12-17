@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useProfileStore } from '../../store/profileStore';
 import { Profile } from '../../data/profiles';
-import { Plus, Trash2, Edit, Save, X, Search, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X, Search, Upload, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { upload } from '@vercel/blob/client';
 
@@ -10,6 +10,7 @@ export const AdminGirls: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUpload] = useState(false);
+  const [uploadingVideo, setUploadVideo] = useState(false);
   
   // Form State
   const initialFormState: Partial<Profile> = {
@@ -44,6 +45,7 @@ export const AdminGirls: React.FC = () => {
     stats: { charm: 80, intelligence: 80, agility: 80 },
     price: '',
     images: [],
+    videos: [],
     availability: 'Available'
   };
 
@@ -114,6 +116,38 @@ export const AdminGirls: React.FC = () => {
     } finally {
       setUpload(false);
     }
+  };
+
+  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    setUploadVideo(true);
+    const file = event.target.files[0];
+    
+    try {
+      const newBlob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
+
+      setFormData(prev => ({ 
+          ...prev, 
+          videos: [...(prev.videos || []), newBlob.url] 
+      }));
+      
+    } catch (error) {
+      console.error('Video Upload failed:', error);
+      alert('视频上传失败，请确保您已配置 Vercel Blob 环境变量');
+    } finally {
+      setUploadVideo(false);
+    }
+  };
+
+  const removeVideoField = (index: number) => {
+    const newVideos = [...(formData.videos || [])];
+    newVideos.splice(index, 1);
+    setFormData(prev => ({ ...prev, videos: newVideos }));
   };
 
   const handleStatChange = (stat: 'charm' | 'intelligence' | 'agility', value: string) => {
@@ -361,7 +395,35 @@ export const AdminGirls: React.FC = () => {
                         <label className="text-sm text-green-500 hover:text-white flex items-center gap-1 cursor-pointer">
                             <Upload className="w-3 h-3" /> 
                             {uploading ? '上传中...' : '上传图片 (Blob)'}
-                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} accept="image/*" />
+                        </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Upload Section */}
+                <div className="mb-4">
+                  <label className="block text-xs text-gray-500 mb-2">视频管理</label>
+                  <div className="space-y-2">
+                    {formData.videos?.map((video, index) => (
+                      <div key={index} className="flex gap-2">
+                         <input 
+                          type="text" 
+                          value={video} 
+                          readOnly
+                          className="flex-1 bg-black/50 border border-white/10 rounded p-2 text-white text-xs truncate" 
+                        />
+                        <button type="button" onClick={() => removeVideoField(index)} className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                     <div className="flex gap-2">
+                        <label className="text-sm text-purple-500 hover:text-white flex items-center gap-1 cursor-pointer">
+                            <Video className="w-3 h-3" /> 
+                            {uploadingVideo ? '上传中...' : '上传视频 (Blob)'}
+                            <input type="file" className="hidden" onChange={handleVideoUpload} disabled={uploadingVideo} accept="video/mp4,video/webm,video/quicktime" />
                         </label>
                     </div>
                   </div>
