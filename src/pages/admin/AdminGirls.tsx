@@ -3,7 +3,7 @@ import { useProfileStore } from '../../store/profileStore';
 import { Profile } from '../../data/profiles';
 import { Plus, Trash2, Edit, Save, X, Search, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { put } from '@vercel/blob';
+import { upload } from '@vercel/blob/client';
 
 export const AdminGirls: React.FC = () => {
   const { profiles, addProfile, updateProfile, deleteProfile } = useProfileStore();
@@ -43,7 +43,7 @@ export const AdminGirls: React.FC = () => {
     bonus: '',
     stats: { charm: 80, intelligence: 80, agility: 80 },
     price: '',
-    images: ['/placeholders/default.jpg'],
+    images: [],
     availability: 'Available'
   };
 
@@ -96,23 +96,21 @@ export const AdminGirls: React.FC = () => {
     }
     setUpload(true);
     const file = event.target.files[0];
+    
     try {
-      // Direct upload to Vercel Blob
-      // Note: In strict production, you should use a server-side route to generate a token or handle upload.
-      // But for client-side uploads with `access: 'public'`, we need a client token or use the server action.
-      // Since we don't have a backend route setup for this yet, we will simulate the upload 
-      // OR try to use the put command if the token is available. 
-      // HOWEVER, @vercel/blob `put` is Node.js only. Client-side requires `upload` from `@vercel/blob/client`.
-      
-      // Let's assume for now user will paste URL, OR if we really want upload:
-      // We need to create an API route `/api/upload` in a Next.js or similar environment.
-      // Since this is a Vite SPA, we can't easily do server-side signing without a separate backend function (e.g. Vercel Function).
-      // So for this MVP step, we'll stick to URL input, but I'll add the UI for it.
-      
-      alert("请在 Vercel 后台配置 Serverless Function 以启用文件上传，当前请手动输入 Blob URL。");
+      const newBlob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
+
+      setFormData(prev => ({ 
+          ...prev, 
+          images: [...(prev.images || []), newBlob.url] 
+      }));
       
     } catch (error) {
-      console.error(error);
+      console.error('Upload failed:', error);
+      alert('上传失败，请确保您已配置 Vercel Blob 环境变量');
     } finally {
       setUpload(false);
     }
