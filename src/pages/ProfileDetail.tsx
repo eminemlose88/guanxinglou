@@ -1,0 +1,220 @@
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useProfileStore } from '../store/profileStore';
+import { useAuthStore } from '../store/authStore';
+import { motion } from 'framer-motion';
+import { ArrowLeft, CheckCircle, Lock, MapPin, Ruler, Weight, Calendar, Heart, AlertTriangle, Plane, Clock, DollarSign, Star } from 'lucide-react';
+
+export const ProfileDetail: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
+  const { getProfile } = useProfileStore();
+  
+  const profile = getProfile(id || '');
+
+  if (!profile) {
+    return <div className="text-center py-20">未找到档案</div>;
+  }
+
+  const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => (
+    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5">
+      <div className="text-gray-400">{icon}</div>
+      <div>
+        <div className="text-[10px] text-gray-500 uppercase">{label}</div>
+        <div className="text-sm font-bold text-white">
+          {typeof value === 'boolean' ? (value ? '是' : '否') : value || '-'}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col md:flex-row">
+      {/* Left: Image & Quick Stats */}
+      <div className="w-full md:w-5/12 h-1/3 md:h-full relative bg-gray-800 overflow-hidden group">
+         {/* Background Image (Cover) */}
+         {profile.images && profile.images.length > 0 ? (
+           <img src={profile.images[0]} alt={profile.name} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
+         ) : (
+            <div className="absolute inset-0 bg-gray-700 flex items-center justify-center">
+                <span className="text-6xl text-white/10 font-black">{profile.cup} CUP</span>
+            </div>
+         )}
+         
+         <div className="absolute inset-0 bg-gradient-to-t from-abyss via-transparent to-transparent"></div>
+         
+         <div className="absolute bottom-0 left-0 w-full p-8 z-10">
+            <h1 className="text-5xl font-black text-white mb-2">{profile.name}</h1>
+            <div className="flex items-center gap-4 text-lg">
+               <span className="bg-system-blue px-2 py-1 rounded text-xs font-bold text-white">{profile.occupation}</span>
+               <span className="text-gray-300">{profile.age}岁</span>
+               <span className="text-gray-500">|</span>
+               <span className="text-gray-300">{profile.location}</span>
+            </div>
+         </div>
+         
+         <button 
+           onClick={() => navigate(-1)}
+           className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/50 hover:text-white transition-colors bg-black/20 backdrop-blur px-4 py-2 rounded-full"
+         >
+            <ArrowLeft className="w-4 h-4" /> 返回
+         </button>
+      </div>
+
+      {/* Right: Detailed Info */}
+      <div className="w-full md:w-7/12 h-2/3 md:h-full overflow-y-auto bg-abyss p-6 md:p-10">
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-3xl mx-auto space-y-8"
+        >
+            {/* 0. Photo Gallery */}
+            {profile.images && profile.images.length > 1 && (
+              <section>
+                 <h3 className="text-system-blue font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <Star className="w-4 h-4" /> 照片墙
+                 </h3>
+                 <div className="grid grid-cols-3 gap-2">
+                   {profile.images.slice(1).map((img, idx) => (
+                     <div key={idx} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50">
+                        <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                     </div>
+                   ))}
+                 </div>
+              </section>
+            )}
+
+            {/* 1. Basic Stats Grid */}
+            <section>
+              <h3 className="text-system-blue font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Star className="w-4 h-4" /> 基础数据
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <InfoItem icon={<Ruler className="w-4 h-4" />} label="身高" value={`${profile.height} cm`} />
+                <InfoItem icon={<Weight className="w-4 h-4" />} label="体重" value={`${profile.weight} kg`} />
+                <InfoItem icon={<Heart className="w-4 h-4" />} label="罩杯" value={profile.cup} />
+                <InfoItem icon={<Calendar className="w-4 h-4" />} label="例假" value={profile.periodDate} />
+              </div>
+            </section>
+
+            {/* 2. Scale & Limits */}
+            <section>
+              <h3 className="text-system-blue font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" /> 尺度与禁忌
+              </h3>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 mb-6">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">Chu女</span>
+                       <span className={profile.isVirgin ? "text-green-400 font-bold" : "text-gray-500"}>{profile.isVirgin ? "是" : "否"}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">接受SM</span>
+                       <span className={profile.acceptSM ? "text-green-400 font-bold" : "text-gray-500"}>{profile.acceptSM ? "是" : "否"}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">无T</span>
+                       <span className={profile.noCondom ? "text-green-400 font-bold" : "text-gray-500"}>{profile.noCondom ? "可" : "否"}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">内She</span>
+                       <span className={profile.creampie ? "text-green-400 font-bold" : "text-gray-500"}>{profile.creampie ? "可" : "否"}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">口</span>
+                       <span className={profile.oral ? "text-green-400 font-bold" : "text-gray-500"}>{profile.oral ? "可" : "否"}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                       <span className="text-gray-400 text-sm">同居/过夜</span>
+                       <span className="text-white text-sm">{profile.liveTogether ? '同居' : ''} {profile.overnight ? '过夜' : ''}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2 col-span-2">
+                       <span className="text-gray-400 text-sm">外地差旅</span>
+                       <span className="text-white text-sm">{profile.travel}</span>
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-3">
+                    <div className="flex gap-2">
+                       <span className="text-gray-500 text-sm whitespace-nowrap">纹身/抽烟:</span>
+                       <span className="text-white text-sm">{profile.tattooSmoke}</span>
+                    </div>
+                    <div className="flex gap-2">
+                       <span className="text-red-400 text-sm whitespace-nowrap">雷点禁忌:</span>
+                       <span className="text-red-300 text-sm">{profile.limits}</span>
+                    </div>
+                 </div>
+              </div>
+            </section>
+
+            {/* 3. Description & Bonus */}
+            <section>
+               <h3 className="text-system-blue font-bold uppercase tracking-widest mb-4">自我介绍</h3>
+               <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
+                  <div>
+                    <span className="text-xs text-system-blue font-bold uppercase mb-1 block">加分项</span>
+                    <p className="text-white">{profile.bonus}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 font-bold uppercase mb-1 block">个人描述</span>
+                    <p className="text-gray-300 leading-relaxed text-sm">{profile.description}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 font-bold uppercase mb-1 block">寻主原因</span>
+                    <p className="text-gray-400 italic text-sm">"{profile.reason}"</p>
+                  </div>
+               </div>
+            </section>
+
+            {/* 4. Budget & Action */}
+            {isAuthenticated ? (
+                <section className="bg-rank-gold/10 border border-rank-gold/30 rounded-xl p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                        <DollarSign className="w-5 h-5 text-rank-gold" />
+                        <h3 className="text-rank-gold font-bold uppercase tracking-widest">预算方案</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <div className="text-xs text-rank-gold/70 uppercase">月生活费</div>
+                            <div className="text-2xl font-bold text-white">{profile.monthlyBudget}</div>
+                            <div className="text-xs text-gray-400 mt-1">陪伴: {profile.monthlyDays}</div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-rank-gold/70 uppercase">短期(3天)</div>
+                            <div className="text-2xl font-bold text-white">{profile.shortTermBudget}</div>
+                            <div className="text-xs text-gray-400 mt-1">支付: {profile.paymentSplit}</div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-rank-gold/20">
+                         <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <Clock className="w-4 h-4" />
+                            最早出发: <span className="text-white">{profile.startTime}</span>
+                         </div>
+                         <button className="bg-rank-gold hover:bg-yellow-400 text-black px-8 py-3 rounded font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <CheckCircle className="w-5 h-5" />
+                            发起签约
+                         </button>
+                    </div>
+                </section>
+            ) : (
+                <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-xl text-center">
+                    <Lock className="w-10 h-10 text-red-500 mx-auto mb-4" />
+                    <h4 className="text-red-400 font-bold text-lg mb-2">机密信息加密中</h4>
+                    <p className="text-sm text-gray-400 mb-6">具体的预算要求、联系方式及深度服务细节仅对认证会员开放。</p>
+                    <button 
+                        onClick={() => navigate('/login')}
+                        className="text-white bg-white/10 hover:bg-white/20 px-6 py-2 rounded transition-colors"
+                    >
+                        登录查看完整档案
+                    </button>
+                </div>
+            )}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
