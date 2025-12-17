@@ -81,3 +81,40 @@ alter table admins enable row level security;
 create policy "Public Access" on app_users for all using (true);
 create policy "Public Access" on profiles for all using (true);
 create policy "Public Access" on admins for all using (true);
+
+-- Insert Mock Data (Profiles)
+insert into profiles (
+  name, rank, class_type, description, location, age, height, weight, cup, occupation,
+  is_virgin, period_date, tattoo_smoke, limits, accept_sm, no_condom, creampie, oral,
+  live_together, overnight, travel, monthly_budget, monthly_days, short_term_budget,
+  payment_split, reason, start_time, bonus, stats, price, images, availability
+) values
+(
+  '塞拉菲娜', 'S', 'Mage', '深渊之星。以优雅和毁灭性的智慧闻名。', '安徽 合肥', 22, 172, 50, 'D', '平面模特',
+  false, '15号', '无', '不接受多人', false, true, true, true,
+  true, true, '可飞全球', '10W', '15天', '1.5W',
+  '见人付半', '想买房', '随时', '皮肤超白，会跳芭蕾，声音好听', '{"charm": 98, "intelligence": 95, "agility": 80}', '100,000 RMB/月', ARRAY['/placeholders/seraphina.jpg'], 'Available'
+),
+(
+  '尤娜', 'A', 'Healer', '温柔的灵魂，拥有抚慰疲惫旅人的力量。', '上海', 20, 165, 48, 'C', '学生',
+  true, '5号', '无', '不接受变态玩法', false, false, false, true,
+  false, true, '仅限江浙沪', '5W', '8天', '8k',
+  '全款', '学费', '周末', '极品清纯，听话懂事', '{"charm": 92, "intelligence": 85, "agility": 70}', '50,000 RMB/月', ARRAY['/placeholders/yuna.jpg'], 'On Mission'
+),
+(
+  '小雅', 'B', 'Healer', '成熟稳重，性格开朗，能够提供极佳的情绪价值。', '安徽 合肥巢湖', 32, 165, 75, 'C', '无业',
+  false, '7号', '有小面积', '别太凶', false, true, true, true,
+  true, true, '最好周边', '协商', '3-5天', '3k-5k',
+  '2次', '穷', '都行', '事少 性格开朗乐观，胸大，活好，欲望强，上下粉嫩', '{"charm": 85, "intelligence": 80, "agility": 60}', '3,000 - 5,000 RMB/短期', ARRAY['/placeholders/xiaoya.jpg'], 'Available'
+);
+
+-- Insert Mock Data (Users)
+insert into app_users (username, role, rank, status, last_login, secret_key) values
+('boss_s_01', 'boss', 'S', 'active', now(), 'key-s-boss'),
+('vip_a_02', 'boss', 'A', 'active', now(), 'key-a-vip'),
+('member_c_99', 'boss', 'C', 'active', now(), 'key-c-member'),
+('banned_user', 'boss', 'B', 'banned', now(), 'key-b-banned');
+
+-- Insert Mock Data (Admins)
+insert into admins (username, password, secret_key) values
+('admin', 'admin', 'star-key-2024');
