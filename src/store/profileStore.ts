@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import { profiles as initialMockProfiles, Profile } from '../data/profiles';
 
@@ -6,77 +7,94 @@ interface ProfileState {
   profiles: Profile[];
   loading: boolean;
   error: string | null;
+  lastFetched: number;
   
-  fetchProfiles: () => Promise<void>;
+  fetchProfiles: (force?: boolean) => Promise<void>;
   addProfile: (profile: Omit<Profile, 'id'>) => Promise<void>;
   updateProfile: (id: string, updatedProfile: Partial<Profile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
   getProfile: (id: string) => Profile | undefined;
 }
 
-export const useProfileStore = create<ProfileState>((set, get) => ({
-  profiles: [],
-  loading: false,
-  error: null,
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
 
-  fetchProfiles: async () => {
-    set({ loading: true });
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+export const useProfileStore = create<ProfileState>()(
+  persist(
+    (set, get) => ({
+      profiles: [],
+      loading: false,
+      error: null,
+      lastFetched: 0,
 
-      if (error) throw error;
-      
-      // Map snake_case from DB to camelCase for frontend
-      if (!data || data.length === 0) {
-        set({ profiles: initialMockProfiles, loading: false });
-      } else {
-        const mappedProfiles: Profile[] = data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          rank: p.rank,
-          classType: p.class_type,
-          description: p.description,
-          location: p.location,
-          age: p.age,
-          height: p.height,
-          weight: p.weight,
-          cup: p.cup,
-          occupation: p.occupation,
-          isVirgin: p.is_virgin,
-          periodDate: p.period_date,
-          tattooSmoke: p.tattoo_smoke,
-          limits: p.limits,
-          acceptSM: p.accept_sm,
-          noCondom: p.no_condom,
-          creampie: p.creampie,
-          oral: p.oral,
-          liveTogether: p.live_together,
-          overnight: p.overnight,
-          travel: p.travel,
-          monthlyBudget: p.monthly_budget,
-          monthlyDays: p.monthly_days,
-          shortTermBudget: p.short_term_budget,
-          paymentSplit: p.payment_split,
-          reason: p.reason,
-          startTime: p.start_time,
-          bonus: p.bonus,
-          stats: p.stats,
-          price: p.price,
-          images: p.images,
-          videos: p.videos,
-          availability: p.availability
-        }));
-        set({ profiles: mappedProfiles, loading: false });
-      }
-    } catch (err: any) {
-      console.error('Error fetching profiles:', err);
-      // Fallback to mock data if connection fails (for demo stability)
-      set({ profiles: initialMockProfiles, loading: false, error: err.message });
-    }
-  },
+      fetchProfiles: async (force = false) => {
+        const { lastFetched, profiles, loading } = get();
+        const now = Date.now();
+
+        // Prevent redundant fetches
+        if (!force && profiles.length > 0 && (now - lastFetched < CACHE_DURATION)) {
+          return;
+        }
+
+        // Avoid double loading
+        if (loading) return;
+
+        set({ loading: true });
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          
+          // Map snake_case from DB to camelCase for frontend
+          if (!data || data.length === 0) {
+            set({ profiles: initialMockProfiles, loading: false, lastFetched: now });
+          } else {
+            const mappedProfiles: Profile[] = data.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              rank: p.rank,
+              classType: p.class_type,
+              description: p.description,
+              location: p.location,
+              age: p.age,
+              height: p.height,
+              weight: p.weight,
+              cup: p.cup,
+              occupation: p.occupation,
+              isVirgin: p.is_virgin,
+              periodDate: p.period_date,
+              tattooSmoke: p.tattoo_smoke,
+              limits: p.limits,
+              acceptSM: p.accept_sm,
+              noCondom: p.no_condom,
+              creampie: p.creampie,
+              oral: p.oral,
+              liveTogether: p.live_together,
+              overnight: p.overnight,
+              travel: p.travel,
+              monthlyBudget: p.monthly_budget,
+              monthlyDays: p.monthly_days,
+              shortTermBudget: p.short_term_budget,
+              paymentSplit: p.payment_split,
+              reason: p.reason,
+              startTime: p.start_time,
+              bonus: p.bonus,
+              stats: p.stats,
+              price: p.price,
+              images: p.images,
+              videos: p.videos,
+              availability: p.availability
+            }));
+            set({ profiles: mappedProfiles, loading: false, lastFetched: now });
+          }
+        } catch (err: any) {
+          console.error('Error fetching profiles:', err);
+          // Fallback to mock data if connection fails (for demo stability)
+          set({ profiles: initialMockProfiles, loading: false, error: err.message, lastFetched: now });
+        }
+      },
 
   addProfile: async (profile) => {
     try {
@@ -217,4 +235,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   getProfile: (id) => get().profiles.find((p) => p.id === id),
-}));
+    }),
+    {
+      name: 'profile-storage', // unique name
+      storage: createJSONStorage(() => localStorage), // use localStorage
+      partialize: (state) => ({ profiles: state.profiles, lastFetched: state.lastFetched }), // only persist data and timestamp
+    }
+  )
+);
