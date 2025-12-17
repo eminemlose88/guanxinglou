@@ -145,9 +145,9 @@ export const MainLayout: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-widest">法律</h4>
             <ul className="space-y-2 text-sm text-gray-500">
-              <li><span className="cursor-not-allowed hover:text-white">隐私协议</span></li>
-              <li><span className="cursor-not-allowed hover:text-white">会员条款</span></li>
-              <li><span className="cursor-not-allowed hover:text-white">免责声明</span></li>
+              <li><Link to="/legal?tab=privacy" className="hover:text-white transition-colors">隐私协议</Link></li>
+              <li><Link to="/legal?tab=terms" className="hover:text-white transition-colors">会员条款</Link></li>
+              <li><Link to="/legal?tab=disclaimer" className="hover:text-white transition-colors">免责声明</Link></li>
             </ul>
           </div>
         </div>

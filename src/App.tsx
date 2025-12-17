@@ -10,6 +10,7 @@ import { ProfileDetail } from './pages/ProfileDetail';
 import { Process } from './pages/Process';
 import { Contact } from './pages/Contact';
 import { About } from './pages/About';
+import { Legal } from './pages/Legal';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminGirls } from './pages/admin/AdminGirls';
@@ -40,6 +41,7 @@ function App() {
           <Route path="process" element={<Process />} />
           <Route path="contact" element={<Contact />} />
           <Route path="about" element={<About />} />
+          <Route path="legal" element={<Legal />} />
         </Route>
 
         {/* Admin Routes */}
