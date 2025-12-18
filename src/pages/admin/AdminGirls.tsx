@@ -12,11 +12,23 @@ export const AdminGirls: React.FC = () => {
   const [uploading, setUpload] = useState(false);
   const [uploadingVideo, setUploadVideo] = useState(false);
   const [viewMode, setViewMode] = useState<'active' | 'trash'>('active');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   // Filter profiles based on view mode
   const activeProfiles = profiles.filter(p => !p.isDeleted);
   const trashProfiles = profiles.filter(p => p.isDeleted);
   const displayedProfiles = viewMode === 'active' ? activeProfiles : trashProfiles;
+
+  // Pagination Logic
+  const totalPages = Math.ceil(displayedProfiles.length / itemsPerPage);
+  const paginatedProfiles = displayedProfiles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset page when switching modes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [viewMode]);
+
   const initialFormState: Partial<Profile> = {
     name: '',
     rank: 'Common', // Default rank is Common now
@@ -204,14 +216,14 @@ export const AdminGirls: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {displayedProfiles.length === 0 ? (
+            {paginatedProfiles.length === 0 ? (
                <tr>
                  <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
                    {viewMode === 'active' ? '暂无活跃档案' : '回收站为空'}
                  </td>
                </tr>
             ) : (
-              displayedProfiles.map((profile) => (
+              paginatedProfiles.map((profile) => (
               <tr key={profile.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-6 py-4 font-medium text-white">
                   {profile.name}
@@ -251,6 +263,42 @@ export const AdminGirls: React.FC = () => {
             )))}
           </tbody>
         </table>
+        
+        {/* Admin Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center px-6 py-4 bg-black/30 border-t border-white/5">
+            <span className="text-xs text-gray-500">
+              显示 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, displayedProfiles.length)} / 共 {displayedProfiles.length} 条
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-xs rounded bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-6 h-6 flex items-center justify-center rounded text-xs ${currentPage === page ? 'bg-system-blue text-white' : 'text-gray-500 hover:text-white'}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-xs rounded bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
