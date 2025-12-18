@@ -19,7 +19,7 @@ export const AdminGirls: React.FC = () => {
   const displayedProfiles = viewMode === 'active' ? activeProfiles : trashProfiles;
   const initialFormState: Partial<Profile> = {
     name: '',
-    rank: 'S', // Default rank hidden from UI
+    rank: 'Common', // Default rank is Common now
     classType: 'Mage',
     description: '',
     location: '',

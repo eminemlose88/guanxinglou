@@ -1,7 +1,7 @@
 export interface Profile {
   id: string;
   name: string;
-  rank: 'S' | 'A' | 'B' | 'C';
+  rank: string; // Simplified from specific unions to string to support "Common", "VIP" or legacy
   classType: 'Mage' | 'Assassin' | 'Healer' | 'Tank' | 'None'; // Keeping for legacy/theme or 'None'
   description: string;
   

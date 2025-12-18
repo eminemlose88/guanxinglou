@@ -57,7 +57,7 @@ export const useProfileStore = create<ProfileState>()(
             const mappedProfiles: Profile[] = data.map((p: any) => ({
               id: p.id,
               name: p.name,
-              rank: p.rank,
+              rank: p.rank || 'Common', // Default to Common if undefined
               classType: p.class_type,
               description: p.description,
               location: p.location,
