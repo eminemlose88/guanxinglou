@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, ShieldCheck, MessageCircle } from 'lucide-react';
+import { Send, ShieldCheck, MessageCircle, CheckCircle } from 'lucide-react';
+import { useMessageStore } from '../store/messageStore';
 
 export const Contact: React.FC = () => {
+  const [formData, setFormData] = useState({ name: '', contact: '', message: '' });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const sendMessage = useMessageStore(state => state.sendMessage);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.contact || !formData.message) return;
+
+    setStatus('sending');
+    const success = await sendMessage(formData.name, formData.contact, formData.message);
+    
+    if (success) {
+      setStatus('success');
+      setFormData({ name: '', contact: '', message: '' });
+      setTimeout(() => setStatus('idle'), 3000);
+    } else {
+      setStatus('error');
+    }
+  };
+
   return (
     <div className="container mx-auto px-6 py-20 min-h-[80vh] flex items-center">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full">
@@ -66,25 +87,63 @@ export const Contact: React.FC = () => {
           <h3 className="text-2xl font-bold mb-6">发送加密留言</h3>
           <p className="text-gray-500 text-sm mb-6">如果您暂时无法使用 Telegram，可在此留下您的联系方式，我们将通过加密邮件与您取得联系。</p>
           
-          <form className="space-y-6 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div>
               <label className="block text-sm font-mono text-gray-500 mb-2">您的代号 / 称呼</label>
-              <input type="text" className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" placeholder="Mr. Shadow" />
+              <input 
+                type="text" 
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" 
+                placeholder="Mr. Shadow" 
+                required
+              />
             </div>
             
             <div>
               <label className="block text-sm font-mono text-gray-500 mb-2">备用联系方式 (Email/WeChat)</label>
-              <input type="text" className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" placeholder="secure@email.com" />
+              <input 
+                type="text" 
+                value={formData.contact}
+                onChange={(e) => setFormData({...formData, contact: e.target.value})}
+                className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" 
+                placeholder="secure@email.com" 
+                required
+              />
             </div>
 
             <div>
               <label className="block text-sm font-mono text-gray-500 mb-2">需求简述</label>
-              <textarea rows={4} className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" placeholder="请输入您的特殊要求..."></textarea>
+              <textarea 
+                rows={4} 
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                className="w-full bg-black/50 border border-white/10 rounded px-4 py-3 focus:border-system-blue focus:outline-none text-white transition-colors" 
+                placeholder="请输入您的特殊要求..."
+                required
+              ></textarea>
             </div>
 
-            <button type="button" className="w-full bg-system-blue text-white font-bold py-4 rounded hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
-              <Send className="w-4 h-4" />
-              发送讯息
+            <button 
+              type="submit" 
+              disabled={status === 'sending' || status === 'success'}
+              className={`w-full font-bold py-4 rounded transition-all flex items-center justify-center gap-2 ${
+                status === 'success' ? 'bg-green-600 text-white' : 'bg-system-blue text-white hover:bg-blue-600'
+              }`}
+            >
+              {status === 'sending' ? (
+                <span>发送中...</span>
+              ) : status === 'success' ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  已加密发送
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  发送讯息
+                </>
+              )}
             </button>
           </form>
         </motion.div>

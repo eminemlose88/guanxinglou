@@ -15,6 +15,7 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminGirls } from './pages/admin/AdminGirls';
 import { AdminUsers } from './pages/admin/AdminUsers';
+import { AdminMessages } from './pages/admin/AdminMessages';
 import { useAuthStore } from './store/authStore';
 import { useProfileStore } from './store/profileStore';
 
@@ -49,6 +50,7 @@ function App() {
            <Route path="dashboard" element={<AdminDashboard />} />
            <Route path="girls" element={<AdminGirls />} />
            <Route path="users" element={<AdminUsers />} />
+           <Route path="messages" element={<AdminMessages />} />
         </Route>
       </Routes>
     </Router>

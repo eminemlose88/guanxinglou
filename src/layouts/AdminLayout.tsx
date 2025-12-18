@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, Users, UserCog, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, LogOut, Shield, MessageSquare } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const AdminLayout: React.FC = () => {
@@ -24,6 +24,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/dashboard', label: '概览', icon: <LayoutDashboard className="w-5 h-5" /> },
     { path: '/admin/girls', label: '人员管理', icon: <Users className="w-5 h-5" /> },
     { path: '/admin/users', label: '用户管理', icon: <UserCog className="w-5 h-5" /> },
+    { path: '/admin/messages', label: '加密留言', icon: <MessageSquare className="w-5 h-5" /> },
   ];
 
   return (
