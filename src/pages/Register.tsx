@@ -13,8 +13,8 @@ export const Register: React.FC = () => {
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
-  // Hardcode Site Key to rule out env var issues
-  const siteKey = "0x4AAAAAACHeKhWszKULsMS4";
+  // Use real Site Key from env
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
