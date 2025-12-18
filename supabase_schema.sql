@@ -3,7 +3,7 @@ create table app_users (
   id uuid default gen_random_uuid() primary key,
   username text not null,
   role text check (role in ('boss', 'guest', 'admin')) not null,
-  rank text check (rank in ('S', 'A', 'B', 'C', 'None')) not null,
+  rank text check (rank in ('S', 'A', 'B', 'C', 'None', 'VIP', 'Common')) not null,
   status text check (status in ('active', 'banned')) default 'active',
   last_login timestamptz default now(),
   secret_key text unique not null,
@@ -112,10 +112,10 @@ insert into profiles (
 
 -- Insert Mock Data (Users)
 insert into app_users (username, role, rank, status, last_login, secret_key) values
+('vip_boss', 'boss', 'VIP', 'active', now(), 'key-vip-boss'),
+('common_user', 'boss', 'Common', 'active', now(), 'key-common-user'),
 ('boss_s_01', 'boss', 'S', 'active', now(), 'key-s-boss'),
-('vip_a_02', 'boss', 'A', 'active', now(), 'key-a-vip'),
-('member_c_99', 'boss', 'C', 'active', now(), 'key-c-member'),
-('banned_user', 'boss', 'B', 'banned', now(), 'key-b-banned');
+('vip_a_02', 'boss', 'A', 'active', now(), 'key-a-vip');
 
 -- Insert Mock Data (Admins)
 insert into admins (username, password, secret_key) values

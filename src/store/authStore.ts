@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 
-export type Rank = 'S' | 'A' | 'B' | 'C' | 'None';
+export type Rank = 'S' | 'A' | 'B' | 'C' | 'None' | 'Common' | 'VIP';
 
 export interface User {
   id: string;
@@ -16,10 +16,8 @@ export interface User {
 
 // Mock initial users for fallback
 const initialUsers: User[] = [
-  { id: '1', username: 'boss_s_01', role: 'boss', rank: 'S', status: 'active', lastLogin: '2024-01-15', secretKey: 'key-s-boss' },
-  { id: '2', username: 'vip_a_02', role: 'boss', rank: 'A', status: 'active', lastLogin: '2024-01-14', secretKey: 'key-a-vip' },
-  { id: '3', username: 'member_c_99', role: 'boss', rank: 'C', status: 'active', lastLogin: '2024-01-10', secretKey: 'key-c-member' },
-  { id: '4', username: 'banned_user', role: 'boss', rank: 'B', status: 'banned', lastLogin: '2023-12-01', secretKey: 'key-b-banned' },
+  { id: '1', username: 'boss_s_01', role: 'boss', rank: 'VIP', status: 'active', lastLogin: '2024-01-15', secretKey: 'key-s-boss' },
+  { id: '2', username: 'vip_a_02', role: 'boss', rank: 'Common', status: 'active', lastLogin: '2024-01-14', secretKey: 'key-a-vip' },
 ];
 
 interface AuthState {
@@ -78,12 +76,13 @@ export const useAuthStore = create<AuthState>()(
                 .single();
             
             if (data) {
-                 if (data.rank === rank) {
-                    set({ isAuthenticated: true, userRole: 'boss', userRank: data.rank });
-                    // Update last_login in background
-                    supabase.from('app_users').update({ last_login: new Date().toISOString() }).eq('id', data.id).then();
-                    return true;
-                 }
+                 // Ignore rank check for login, just check if active and key matches
+                 // Update: user said "register login can view girls"
+                 // So we don't strictly check rank input here, we just use the user's actual rank
+                 set({ isAuthenticated: true, userRole: 'boss', userRank: data.rank });
+                 // Update last_login in background
+                 supabase.from('app_users').update({ last_login: new Date().toISOString() }).eq('id', data.id).then();
+                 return true;
             }
         } catch (err) {
             console.warn("DB login failed, falling back to local/mock:", err);
@@ -91,7 +90,7 @@ export const useAuthStore = create<AuthState>()(
     
         // 2. Fallback to local users state (including mock data)
         const user = get().users.find(u => u.secretKey === secretKey && u.status === 'active');
-        if (user && user.rank === rank) {
+        if (user) {
             set({ isAuthenticated: true, userRole: 'boss', userRank: user.rank });
             return true;
         }
@@ -108,7 +107,7 @@ export const useAuthStore = create<AuthState>()(
                 .insert([{
                     username,
                     role: 'boss',
-                    rank: 'C',
+                    rank: 'Common', // Default rank is Common
                     status: 'active',
                     secret_key: newKey,
                     last_login: new Date().toISOString()
@@ -138,7 +137,7 @@ export const useAuthStore = create<AuthState>()(
                 id: Date.now().toString(),
                 username,
                 role: 'boss',
-                rank: 'C',
+                rank: 'Common',
                 status: 'active',
                 lastLogin: new Date().toISOString(),
                 secretKey: newKey

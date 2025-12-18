@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle, Lock, MapPin, Ruler, Weight, Calendar, Heart, A
 export const ProfileDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, userRank, userRole } = useAuthStore();
   const { getProfile } = useProfileStore();
   
   const profile = getProfile(id || '');
@@ -16,6 +16,10 @@ export const ProfileDetail: React.FC = () => {
   if (!profile) {
     return <div className="text-center py-20">未找到档案</div>;
   }
+
+  const isVip = userRank === 'VIP' || userRole === 'admin' || userRole === 'boss'; // Boss role is legacy, effectively VIP
+  const showLockedContent = isAuthenticated && !isVip;
+  const canViewContent = isAuthenticated && isVip;
 
   const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => (
     <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5">
@@ -77,16 +81,23 @@ export const ProfileDetail: React.FC = () => {
                    <Star className="w-4 h-4" /> 影像资料
                  </h3>
                  <div className="grid grid-cols-3 gap-2">
-                   {/* Videos */}
+                   {/* Videos - Only for VIP */}
                    {profile.videos?.map((vid, idx) => (
                      <div key={`vid-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50 group relative">
-                        <video src={vid} controls className="w-full h-full object-cover" />
+                        {canViewContent ? (
+                            <video src={vid} controls className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-500 gap-2">
+                                <Lock className="w-6 h-6" />
+                                <span className="text-[10px]">VIP 专享</span>
+                            </div>
+                        )}
                         <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-[10px] text-white flex items-center gap-1">
                              Video
                         </div>
                      </div>
                    ))}
-                   {/* Images */}
+                   {/* Images - Visible to all logged in */}
                    {profile.images?.slice(1).map((img, idx) => (
                      <div key={`img-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50">
                         <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
@@ -179,7 +190,7 @@ export const ProfileDetail: React.FC = () => {
             </section>
 
             {/* 4. Budget & Action */}
-            {isAuthenticated ? (
+            {canViewContent ? (
                 <section className="bg-rank-gold/10 border border-rank-gold/30 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-6">
                         <DollarSign className="w-5 h-5 text-rank-gold" />
@@ -210,6 +221,18 @@ export const ProfileDetail: React.FC = () => {
                          </button>
                     </div>
                 </section>
+            ) : showLockedContent ? (
+                <div className="bg-purple-900/20 border border-purple-500/30 p-8 rounded-xl text-center">
+                    <Lock className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+                    <h4 className="text-purple-300 font-bold text-lg mb-2">高级权限锁定</h4>
+                    <p className="text-sm text-gray-400 mb-6">查看详细预算与私密视频需要 VIP 会员权限。</p>
+                    <button 
+                        onClick={() => alert('请联系管理员升级您的账户权限')}
+                        className="text-white bg-purple-600 hover:bg-purple-500 px-6 py-2 rounded transition-colors font-bold shadow-lg shadow-purple-900/50"
+                    >
+                        联系管理员升级
+                    </button>
+                </div>
             ) : (
                 <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-xl text-center">
                     <Lock className="w-10 h-10 text-red-500 mx-auto mb-4" />

@@ -7,9 +7,9 @@ export const AdminUsers: React.FC = () => {
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'S': return <Crown className="w-4 h-4 text-rank-s" />;
-      case 'A': return <Star className="w-4 h-4 text-rank-gold" />;
-      case 'B': return <Shield className="w-4 h-4 text-system-blue" />;
+      case 'VIP': return <Crown className="w-4 h-4 text-rank-s" />;
+      case 'S': return <Crown className="w-4 h-4 text-rank-s" />; // Legacy support
+      case 'Common': return <User className="w-4 h-4 text-gray-400" />;
       default: return <User className="w-4 h-4 text-gray-400" />;
     }
   };
@@ -40,21 +40,25 @@ export const AdminUsers: React.FC = () => {
                 <span>权限等级:</span>
                 <div className="flex items-center gap-2">
                   <span className={`font-bold ${
-                    user.rank === 'S' ? 'text-rank-s' :
-                    user.rank === 'A' ? 'text-rank-gold' :
-                    user.rank === 'B' ? 'text-system-blue' : 'text-gray-400'
-                  }`}>{user.rank}级</span>
+                    user.rank === 'VIP' || user.rank === 'S' ? 'text-rank-s' : 'text-gray-400'
+                  }`}>{user.rank === 'VIP' ? 'VIP会员' : user.rank === 'Common' ? '普通会员' : user.rank}</span>
                   
-                  <select 
-                    value={user.rank} 
-                    onChange={(e) => updateUserRank(user.id, e.target.value as Rank)}
-                    className="bg-black/50 border border-white/10 rounded text-xs px-2 py-1 text-white focus:outline-none focus:border-system-blue"
-                  >
-                    <option value="S">S级</option>
-                    <option value="A">A级</option>
-                    <option value="B">B级</option>
-                    <option value="C">C级</option>
-                  </select>
+                  {user.rank !== 'VIP' && (
+                    <button 
+                      onClick={() => updateUserRank(user.id, 'VIP')}
+                      className="bg-rank-gold/20 text-rank-gold border border-rank-gold/50 rounded text-xs px-2 py-1 hover:bg-rank-gold hover:text-black transition-colors flex items-center gap-1"
+                    >
+                      <ChevronUp className="w-3 h-3" /> 升级VIP
+                    </button>
+                  )}
+                  {user.rank === 'VIP' && (
+                    <button 
+                      onClick={() => updateUserRank(user.id, 'Common')}
+                      className="bg-white/10 text-gray-400 border border-white/20 rounded text-xs px-2 py-1 hover:bg-white/20 hover:text-white transition-colors"
+                    >
+                      降级
+                    </button>
+                  )}
                 </div>
               </div>
               <p>最后登录: {user.lastLogin}</p>
