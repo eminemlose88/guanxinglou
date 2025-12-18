@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [captchaError, setCaptchaError] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
@@ -22,7 +23,8 @@ export const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!captchaToken) {
-        alert("请完成人机验证");
+        setCaptchaError(true);
+        setTimeout(() => setCaptchaError(false), 3000);
         return;
     }
 
@@ -93,6 +95,17 @@ export const Login: React.FC = () => {
               >
                 [错误] 验证失败。私钥无效或已被封禁。
               </motion.p>
+            )}
+
+            {captchaError && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono p-2 rounded text-center mb-4"
+              >
+                ⚠️ 访问被拒绝：请先完成人机验证
+              </motion.div>
             )}
 
             <button

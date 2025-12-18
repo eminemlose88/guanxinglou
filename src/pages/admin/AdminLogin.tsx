@@ -10,6 +10,7 @@ export const AdminLogin: React.FC = () => {
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
 
@@ -19,7 +20,8 @@ export const AdminLogin: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!captchaToken) {
-        alert("请完成安全验证");
+        setCaptchaError(true);
+        setTimeout(() => setCaptchaError(false), 3000);
         return;
     }
 
@@ -90,6 +92,17 @@ export const AdminLogin: React.FC = () => {
                   />
               </div>
             </div>
+
+            {captchaError && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-mono p-2 rounded text-center mb-4"
+              >
+                ⚠️ 安全警告：必须完成身份验证
+              </motion.div>
+            )}
 
             {error && (
               <p className="text-red-500 text-xs font-mono text-center">

@@ -10,6 +10,7 @@ export const Register: React.FC = () => {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
@@ -20,7 +21,8 @@ export const Register: React.FC = () => {
     e.preventDefault();
     if (!username.trim()) return;
     if (!captchaToken) {
-        alert("请完成人机验证");
+        setCaptchaError(true);
+        setTimeout(() => setCaptchaError(false), 3000);
         return;
     }
     
@@ -92,6 +94,17 @@ export const Register: React.FC = () => {
                     />
                 </div>
               </div>
+
+              {captchaError && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono p-2 rounded text-center"
+                >
+                  ⚠️ 注册被拦截：请先完成人机验证
+                </motion.div>
+              )}
 
               <button
                 type="submit"
