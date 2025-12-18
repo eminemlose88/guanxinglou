@@ -16,8 +16,8 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   // const turnstile = useTurnstile(); // Removed, as we will use ref if needed, or simple key reset
 
-  // Use real Site Key from env
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  // Hardcode Site Key to ensure it works
+  const siteKey = "0x4AAAAAACHeKhWszKULsMS4";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

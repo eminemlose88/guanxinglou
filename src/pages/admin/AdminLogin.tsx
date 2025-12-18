@@ -13,8 +13,8 @@ export const AdminLogin: React.FC = () => {
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
 
-  // Use real Site Key from env
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  // Hardcode Site Key to ensure it works
+  const siteKey = "0x4AAAAAACHeKhWszKULsMS4";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
