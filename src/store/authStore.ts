@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
                  // Ignore rank check for login, just check if active and key matches
                  // Update: user said "register login can view girls"
                  // So we don't strictly check rank input here, we just use the user's actual rank
-                 set({ isAuthenticated: true, userRole: 'boss', userRank: data.rank });
+                 set({ isAuthenticated: true, userRole: 'boss', userRank: (data as any).rank });
                  // Update last_login in background (this might fail if RLS blocks update, but login succeeds)
                  // Note: To update last_login with RLS, we'd need another RPC or a "Self Update" policy.
                  // For now, we skip updating last_login to prioritize read security.
@@ -163,11 +163,6 @@ export const useAuthStore = create<AuthState>()(
         // Check DB for admin via Secure RPC
         try {
             const { data } = await supabase
-                .rpc('verify_admin_login', { input_username: password, input_password: password }) 
-                // Note: The original code passed 'password' as the first arg? 
-                // Wait, AdminLogin.tsx sends (password, secretKey).
-                // Let's assume the RPC expects (secret_key, password) to match the DB columns.
-                // Re-correcting RPC call below:
                 .rpc('verify_admin_login', { input_secret_key: secretKey, input_password: password })
                 .single();
                 
