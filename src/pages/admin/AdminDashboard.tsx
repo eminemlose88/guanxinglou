@@ -41,12 +41,12 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   const activeGirls = profiles.filter(p => p.availability === 'Available').length;
-  const sRankUsers = users.filter(u => u.rank === 'S').length;
+  const vipUsers = users.filter(u => u.rank === 'VIP').length;
   const totalRevenue = "98,500,000"; // Mock data
 
   const stats = [
     { label: '总档案数', value: profiles.length, icon: <Users className="text-blue-500" />, change: '+2 本周' },
-    { label: 'S级会员', value: sRankUsers, icon: <Crown className="text-rank-s" />, change: '新增 1 人' },
+    { label: 'VIP会员', value: vipUsers, icon: <Crown className="text-rank-s" />, change: '新增 1 人' },
     { label: '活跃用户', value: users.filter(u => u.status === 'active').length, icon: <Activity className="text-purple-500" />, change: '稳定' },
     { label: '本月营收 (G)', value: totalRevenue, icon: <DollarSign className="text-rank-gold" />, change: '+12%' },
   ];

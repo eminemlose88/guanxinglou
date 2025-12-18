@@ -19,7 +19,7 @@ export const AdminGirls: React.FC = () => {
   const displayedProfiles = viewMode === 'active' ? activeProfiles : trashProfiles;
   const initialFormState: Partial<Profile> = {
     name: '',
-    rank: 'B',
+    rank: 'S', // Default rank hidden from UI
     classType: 'Mage',
     description: '',
     location: '',
@@ -198,7 +198,6 @@ export const AdminGirls: React.FC = () => {
             <tr>
               <th className="px-6 py-4">姓名</th>
               <th className="px-6 py-4">基本信息</th>
-              <th className="px-6 py-4">等级</th>
               <th className="px-6 py-4">状态</th>
               <th className="px-6 py-4">预算要求</th>
               <th className="px-6 py-4 text-right">操作</th>
@@ -221,11 +220,6 @@ export const AdminGirls: React.FC = () => {
                 <td className="px-6 py-4">
                   <div>{profile.location}</div>
                   <div className="text-xs text-gray-500">{profile.age}岁 / {profile.height}cm / {profile.cup}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${profile.rank === 'S' ? 'bg-red-900 text-red-200' : 'bg-gray-800 text-gray-300'}`}>
-                    {profile.rank}
-                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`w-2 h-2 rounded-full inline-block mr-2 ${profile.availability === 'Available' ? 'bg-green-500' : 'bg-red-500'}`}></span>
@@ -282,16 +276,10 @@ export const AdminGirls: React.FC = () => {
                     <input type="text" required value={formData.name} onChange={(e) => handleChange('name', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">等级</label>
-                    <select value={formData.rank} onChange={(e) => handleChange('rank', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white">
-                      <option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
-                    </select>
-                  </div>
-                  <div>
                     <label className="block text-xs text-gray-500 mb-1">位置 (省/市)</label>
                     <input type="text" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white" />
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">职业</label>
                     <input type="text" value={formData.occupation} onChange={(e) => handleChange('occupation', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white" />
                   </div>
