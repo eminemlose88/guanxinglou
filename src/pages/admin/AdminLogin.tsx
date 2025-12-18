@@ -82,7 +82,7 @@ export const AdminLogin: React.FC = () => {
               <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">安全验证</label>
               <div className="flex justify-center bg-black border border-red-900/30 rounded p-2">
                   <Turnstile
-                      sitekey="1x00000000000000000000AA" // Cloudflare Test Site Key
+                      sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
                       onVerify={(token) => setCaptchaToken(token)}
                       theme="dark"
                   />

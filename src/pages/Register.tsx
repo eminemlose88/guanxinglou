@@ -84,7 +84,7 @@ export const Register: React.FC = () => {
                 <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">人机验证</label>
                 <div className="flex justify-center bg-black border border-white/10 rounded-lg p-2">
                     <Turnstile
-                        sitekey="1x00000000000000000000AA" // Cloudflare Test Site Key (Always Passes)
+                        sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
                         onVerify={(token) => setCaptchaToken(token)}
                         theme="dark"
                     />
