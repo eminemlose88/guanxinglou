@@ -13,10 +13,8 @@ export const Register: React.FC = () => {
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
-  // Use Test Key in Development, Real Key in Production
-  const siteKey = import.meta.env.DEV 
-    ? "1x00000000000000000000AA" 
-    : (import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA");
+  // Use configured Site Key, fallback to Test Key only if missing
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
