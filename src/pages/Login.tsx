@@ -4,7 +4,7 @@ import { useAuthStore, Rank } from '../store/authStore';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ChevronRight, Crown, Star, Shield, User } from 'lucide-react';
 import clsx from 'clsx';
-import Turnstile, { useTurnstile } from 'react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 import { Link } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ export const Login: React.FC = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
-  const turnstile = useTurnstile();
+  // const turnstile = useTurnstile(); // Removed, as we will use ref if needed, or simple key reset
 
   // Use Test Key in Development, Real Key in Production
   const siteKey = import.meta.env.DEV 
@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
       navigate('/gallery');
     } else {
       setError(true);
-      turnstile.reset();
+      // turnstile.reset(); // Auto-reset is handled by library or manual ref, but for now we just clear token
       setCaptchaToken(null);
       setTimeout(() => setError(false), 2000); // Reset shake
     }
@@ -78,11 +78,11 @@ export const Login: React.FC = () => {
 
             <div>
               <label className="block text-xs font-mono text-system-blue mb-2">人机验证</label>
-              <div className="flex justify-center bg-black/50 border border-white/20 rounded p-2">
+              <div className="flex justify-center bg-black/50 border border-white/20 rounded p-2 min-h-[70px]">
                   <Turnstile
-                      sitekey={siteKey}
-                      onVerify={(token) => setCaptchaToken(token)}
-                      theme="dark"
+                      siteKey={siteKey}
+                      onSuccess={(token) => setCaptchaToken(token)}
+                      options={{ theme: 'dark' }}
                   />
               </div>
             </div>

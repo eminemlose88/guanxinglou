@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { motion } from 'framer-motion';
 import { Lock, Key, ChevronRight, ShieldCheck } from 'lucide-react';
-import Turnstile, { useTurnstile } from 'react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState('');
@@ -12,7 +12,6 @@ export const AdminLogin: React.FC = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
-  const turnstile = useTurnstile();
 
   // Use Test Key in Development, Real Key in Production
   const siteKey = import.meta.env.DEV 
@@ -30,7 +29,7 @@ export const AdminLogin: React.FC = () => {
       navigate('/admin/dashboard');
     } else {
       setError(true);
-      turnstile.reset();
+      // turnstile.reset();
       setCaptchaToken(null);
       setTimeout(() => setError(false), 2000);
     }
@@ -85,11 +84,11 @@ export const AdminLogin: React.FC = () => {
 
             <div>
               <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">安全验证</label>
-              <div className="flex justify-center bg-black border border-red-900/30 rounded p-2">
+              <div className="flex justify-center bg-black border border-red-900/30 rounded p-2 min-h-[70px]">
                   <Turnstile
-                      sitekey={siteKey}
-                      onVerify={(token) => setCaptchaToken(token)}
-                      theme="dark"
+                      siteKey={siteKey}
+                      onSuccess={(token) => setCaptchaToken(token)}
+                      options={{ theme: 'dark' }}
                   />
               </div>
             </div>

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { motion } from 'framer-motion';
 import { User, Copy, CheckCircle, ArrowRight, Shield } from 'lucide-react';
-import Turnstile, { useTurnstile } from 'react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export const Register: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -12,7 +12,6 @@ export const Register: React.FC = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
-  const turnstile = useTurnstile();
 
   // Use Test Key in Development, Real Key in Production
   const siteKey = import.meta.env.DEV 
@@ -32,10 +31,10 @@ export const Register: React.FC = () => {
     try {
         const key = await register(username);
         setGeneratedKey(key);
-        turnstile.reset(); // Reset captcha after success
+        // turnstile.reset(); 
     } catch (err) {
         alert("注册失败：可能已触发IP注册限制（24小时内限2次）");
-        turnstile.reset();
+        // turnstile.reset();
     }
   };
 
@@ -87,11 +86,11 @@ export const Register: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">人机验证</label>
-                <div className="flex justify-center bg-black border border-white/10 rounded-lg p-2">
+                <div className="flex justify-center bg-black border border-white/10 rounded-lg p-2 min-h-[70px]">
                     <Turnstile
-                        sitekey={siteKey}
-                        onVerify={(token) => setCaptchaToken(token)}
-                        theme="dark"
+                        siteKey={siteKey}
+                        onSuccess={(token) => setCaptchaToken(token)}
+                        options={{ theme: 'dark' }}
                     />
                 </div>
               </div>
