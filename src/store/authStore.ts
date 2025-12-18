@@ -82,37 +82,36 @@ export const useAuthStore = create<AuthState>()(
         const newKey = `key-${Math.random().toString(36).substr(2, 9)}`;
         
         try {
+            // Note: We are using the new secure RPC 'secure_register_user' which handles rate limiting.
+            // Direct insert into 'app_users' is now revoked for security.
             const { data, error } = await supabase
-                .from('app_users')
-                .insert([{
-                    username,
-                    role: 'boss',
-                    rank: 'Common', // Default rank is Common
-                    status: 'active',
-                    secret_key: newKey,
-                    last_login: new Date().toISOString()
-                }])
-                .select()
+                .rpc('secure_register_user', {
+                    input_username: username,
+                    input_secret_key: newKey
+                })
                 .single();
             
             if (error) throw error;
             
             // Update local state
             if (data) {
+                 // The RPC returns jsonb, we need to cast it to our User type
+                 const u: any = data;
                  const newUser: User = {
-                    id: data.id,
-                    username: data.username,
-                    role: data.role,
-                    rank: data.rank,
-                    status: data.status,
-                    lastLogin: data.last_login,
-                    secretKey: data.secret_key
+                    id: u.id,
+                    username: u.username,
+                    role: u.role,
+                    rank: u.rank,
+                    status: u.status,
+                    lastLogin: u.last_login,
+                    secretKey: u.secret_key
                 };
                 set(state => ({ users: [...state.users, newUser] }));
             }
         } catch (err) {
             console.error("DB register failed:", err);
             // No fallback, registration must succeed in DB
+            throw err; // Propagate error to UI
         }
         
         return newKey;

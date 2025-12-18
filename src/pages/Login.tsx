@@ -4,22 +4,32 @@ import { useAuthStore, Rank } from '../store/authStore';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ChevronRight, Crown, Star, Shield, User } from 'lucide-react';
 import clsx from 'clsx';
+import Turnstile, { useTurnstile } from 'react-turnstile';
 
 import { Link } from 'react-router-dom';
 
 export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+  const turnstile = useTurnstile();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+        alert("请完成人机验证");
+        return;
+    }
+
     // Rank parameter is ignored by the store now, passing 'Common' as placeholder
     if (await login('Common', password)) {
       navigate('/gallery');
     } else {
       setError(true);
+      turnstile.reset();
+      setCaptchaToken(null);
       setTimeout(() => setError(false), 2000); // Reset shake
     }
   };
@@ -59,6 +69,17 @@ export const Login: React.FC = () => {
                 className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-white focus:border-system-blue focus:outline-none focus:ring-1 focus:ring-system-blue transition-all"
                 placeholder="请输入您的私钥"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-system-blue mb-2">人机验证</label>
+              <div className="flex justify-center bg-black/50 border border-white/20 rounded p-2">
+                  <Turnstile
+                      sitekey="1x00000000000000000000AA" // Cloudflare Test Site Key
+                      onVerify={(token) => setCaptchaToken(token)}
+                      theme="dark"
+                  />
+              </div>
             </div>
 
             {error && (

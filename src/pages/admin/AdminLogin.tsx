@@ -3,20 +3,30 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { motion } from 'framer-motion';
 import { Lock, Key, ChevronRight, ShieldCheck } from 'lucide-react';
+import Turnstile, { useTurnstile } from 'react-turnstile';
 
 export const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
+  const turnstile = useTurnstile();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+        alert("请完成安全验证");
+        return;
+    }
+
     if (await adminLogin(password, secretKey)) {
       navigate('/admin/dashboard');
     } else {
       setError(true);
+      turnstile.reset();
+      setCaptchaToken(null);
       setTimeout(() => setError(false), 2000);
     }
   };
@@ -65,6 +75,17 @@ export const AdminLogin: React.FC = () => {
                   className="w-full bg-black border border-white/10 rounded px-10 py-3 text-white focus:border-red-500 focus:outline-none transition-colors"
                   placeholder="Secret Key"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">安全验证</label>
+              <div className="flex justify-center bg-black border border-red-900/30 rounded p-2">
+                  <Turnstile
+                      sitekey="1x00000000000000000000AA" // Cloudflare Test Site Key
+                      onVerify={(token) => setCaptchaToken(token)}
+                      theme="dark"
+                  />
               </div>
             </div>
 

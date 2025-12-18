@@ -1,22 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { motion } from 'framer-motion';
 import { User, Copy, CheckCircle, ArrowRight, Shield } from 'lucide-react';
+import Turnstile, { useTurnstile } from 'react-turnstile';
 
 export const Register: React.FC = () => {
   const [username, setUsername] = useState('');
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
+  const turnstile = useTurnstile();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
+    if (!captchaToken) {
+        alert("请完成人机验证");
+        return;
+    }
     
-    const key = await register(username);
-    setGeneratedKey(key);
+    // In a real backend, we would verify the token server-side.
+    // For now, we rely on the client-side check + DB rate limiting.
+    try {
+        const key = await register(username);
+        setGeneratedKey(key);
+        turnstile.reset(); // Reset captcha after success
+    } catch (err) {
+        alert("注册失败：可能已触发IP注册限制（24小时内限2次）");
+        turnstile.reset();
+    }
   };
 
   const copyToClipboard = () => {
@@ -62,6 +77,17 @@ export const Register: React.FC = () => {
                     placeholder="Username"
                     required
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">人机验证</label>
+                <div className="flex justify-center bg-black border border-white/10 rounded-lg p-2">
+                    <Turnstile
+                        sitekey="1x00000000000000000000AA" // Cloudflare Test Site Key (Always Passes)
+                        onVerify={(token) => setCaptchaToken(token)}
+                        theme="dark"
+                    />
                 </div>
               </div>
 
