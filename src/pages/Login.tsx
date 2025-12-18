@@ -8,7 +8,6 @@ import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 
 export const Login: React.FC = () => {
-  const [selectedRank, setSelectedRank] = useState<Rank>('S');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const login = useAuthStore((state) => state.login);
@@ -16,20 +15,14 @@ export const Login: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (await login(selectedRank, password)) {
+    // Rank parameter is ignored by the store now, passing 'Common' as placeholder
+    if (await login('Common', password)) {
       navigate('/gallery');
     } else {
       setError(true);
       setTimeout(() => setError(false), 2000); // Reset shake
     }
   };
-
-  const ranks: { id: Rank; label: string; icon: React.ReactNode; color: string }[] = [
-    { id: 'S', label: 'S级公钥', icon: <Crown className="w-5 h-5" />, color: 'text-rank-s' },
-    { id: 'A', label: 'A级公钥', icon: <Star className="w-5 h-5" />, color: 'text-rank-gold' },
-    { id: 'B', label: 'B级公钥', icon: <Shield className="w-5 h-5" />, color: 'text-system-blue' },
-    { id: 'C', label: 'C级公钥', icon: <User className="w-5 h-5" />, color: 'text-gray-400' },
-  ];
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center relative overflow-hidden">
@@ -52,44 +45,19 @@ export const Login: React.FC = () => {
           </div>
 
           <p className="text-blue-200/70 mb-8 text-sm leading-relaxed">
-            请选择您的公钥等级并输入对应的私钥以进行身份验证。
+            请输入您的私钥以进行身份验证。
           </p>
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Rank Selection Tabs */}
-            <div className="grid grid-cols-4 gap-2 bg-black/50 p-1 rounded-lg border border-white/10">
-              {ranks.map((rank) => (
-                <button
-                  key={rank.id}
-                  type="button"
-                  onClick={() => { setSelectedRank(rank.id); setError(false); setPassword(''); }}
-                  className={clsx(
-                    "flex flex-col items-center justify-center py-2 rounded transition-all",
-                    selectedRank === rank.id 
-                      ? "bg-white/10 shadow-lg border border-white/20" 
-                      : "hover:bg-white/5 opacity-50 hover:opacity-100"
-                  )}
-                >
-                  <div className={rank.color}>{rank.icon}</div>
-                  <span className={clsx("text-[10px] font-bold mt-1", selectedRank === rank.id ? "text-white" : "text-gray-500")}>
-                    {rank.id}级
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="text-center text-xs text-gray-500 font-mono mb-2">
-               已选择: <span className="text-white font-bold">{ranks.find(r => r.id === selectedRank)?.label}</span>
-            </div>
-
+            
             <div>
               <label className="block text-xs font-mono text-system-blue mb-2">私钥 (SECRET KEY)</label>
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setError(false); }}
                 className="w-full bg-black/50 border border-white/20 rounded px-4 py-3 text-white focus:border-system-blue focus:outline-none focus:ring-1 focus:ring-system-blue transition-all"
-                placeholder={`请输入 ${selectedRank} 级私钥`}
+                placeholder="请输入您的私钥"
               />
             </div>
 
@@ -99,7 +67,7 @@ export const Login: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="text-red-500 text-xs font-mono text-center"
               >
-                [错误] 验证失败。私钥无效。
+                [错误] 验证失败。私钥无效或已被封禁。
               </motion.p>
             )}
 
@@ -113,14 +81,14 @@ export const Login: React.FC = () => {
 
             <div className="text-center pt-2">
               <Link to="/register" className="text-xs text-gray-500 hover:text-white underline underline-offset-4 transition-colors">
-                没有密钥？申请注册C级权限
+                没有密钥？申请注册会员
               </Link>
             </div>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-[10px] text-gray-600 font-mono">
-              加密协议: RSA-4096 // 安全等级: {selectedRank}-CLASS
+              加密协议: RSA-4096 // 安全等级: TOP-SECRET
             </p>
           </div>
         </div>

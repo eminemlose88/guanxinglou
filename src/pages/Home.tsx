@@ -81,9 +81,6 @@ export const Home: React.FC = () => {
               <div className="absolute bottom-0 left-0 w-full p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-2xl font-bold italic">{profile.name}</h3>
-                   <span className={`text-xl font-black ${profile.rank === 'S' ? 'text-rank-s' : 'text-rank-gold'}`}>
-                     {profile.rank}级
-                   </span>
                 </div>
                 <p className="text-gray-400 text-sm mb-4 line-clamp-2">{profile.description}</p>
                 <div className="flex items-center gap-2 text-system-blue text-sm font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300">
