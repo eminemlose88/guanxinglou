@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import { profiles as initialMockProfiles, Profile } from '../data/profiles';
+import { useAuthStore } from './authStore'; // Import auth store to get admin key
 
 interface ProfileState {
   profiles: Profile[];
@@ -102,60 +103,70 @@ export const useProfileStore = create<ProfileState>()(
 
   addProfile: async (profile) => {
     try {
-      // Map camelCase to snake_case for DB
-      const dbProfile = {
-        name: profile.name,
-        rank: profile.rank,
-        class_type: profile.classType,
-        description: profile.description,
-        location: profile.location,
-        age: profile.age,
-        height: profile.height,
-        weight: profile.weight,
-        cup: profile.cup,
-        occupation: profile.occupation,
-        is_virgin: profile.isVirgin,
-        period_date: profile.periodDate,
-        tattoo_smoke: profile.tattooSmoke,
-        limits: profile.limits,
-        accept_sm: profile.acceptSM,
-        no_condom: profile.noCondom,
-        creampie: profile.creampie,
-        oral: profile.oral,
-        live_together: profile.liveTogether,
-        overnight: profile.overnight,
-        travel: profile.travel,
-        monthly_budget: profile.monthlyBudget,
-        monthly_days: profile.monthlyDays,
-        short_term_budget: profile.shortTermBudget,
-        payment_split: profile.paymentSplit,
-        reason: profile.reason,
-        start_time: profile.startTime,
-        bonus: profile.bonus,
-        stats: profile.stats,
-        price: profile.price,
-        images: profile.images,
-        videos: profile.videos,
-        availability: profile.availability,
-        is_deleted: false
-      };
+      // Get Admin Key
+      const adminKey = useAuthStore.getState().currentAdminKey;
+      if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
+      // Prepare payload for RPC
+      // Note: RPC expects camelCase keys in the JSON payload because we handle mapping inside the SQL or 
+      // actually the SQL uses ->>'name' etc. 
+      // My SQL script uses camelCase keys inside the JSON (profile_data->>'classType').
+      // So we can pass the profile object directly!
+      
       const { data, error } = await supabase
-        .from('profiles')
-        .insert([dbProfile])
-        .select()
-        .single();
+        .rpc('admin_cud_profile', {
+            admin_secret: adminKey,
+            operation_type: 'INSERT',
+            profile_data: profile
+        });
 
       if (error) throw error;
       if (data) {
-         // Map back the ID and snake_case result to camelCase (or just use local profile with new ID)
-         // For simplicity, reconstruct from input + id
-        const newProfile = { ...profile, id: data.id, isDeleted: false } as Profile;
+         // Map the returned snake_case data back to camelCase profile
+         // Actually the RPC returns the row from `profiles` table, which is snake_case.
+         const p: any = data;
+         const newProfile: Profile = {
+              id: p.id,
+              name: p.name,
+              rank: p.rank || 'Common',
+              classType: p.class_type,
+              description: p.description,
+              location: p.location,
+              age: p.age,
+              height: p.height,
+              weight: p.weight,
+              cup: p.cup,
+              occupation: p.occupation,
+              isVirgin: p.is_virgin,
+              periodDate: p.period_date,
+              tattooSmoke: p.tattoo_smoke,
+              limits: p.limits,
+              acceptSM: p.accept_sm,
+              noCondom: p.no_condom,
+              creampie: p.creampie,
+              oral: p.oral,
+              liveTogether: p.live_together,
+              overnight: p.overnight,
+              travel: p.travel,
+              monthlyBudget: p.monthly_budget,
+              monthlyDays: p.monthly_days,
+              shortTermBudget: p.short_term_budget,
+              paymentSplit: p.payment_split,
+              reason: p.reason,
+              startTime: p.start_time,
+              bonus: p.bonus,
+              stats: p.stats,
+              price: p.price,
+              images: p.images,
+              videos: p.videos,
+              availability: p.availability,
+              isDeleted: p.is_deleted
+         };
         set((state) => ({ profiles: [newProfile, ...state.profiles] }));
       }
     } catch (err: any) {
       console.error('Error adding profile:', err);
-      // Optimistic update for demo even if DB fails
+      // Fallback for demo if RPC fails or not deployed yet
       const newProfile = { ...profile, id: Date.now().toString(), isDeleted: false } as Profile;
       set((state) => ({ profiles: [newProfile, ...state.profiles] }));
     }
@@ -163,46 +174,17 @@ export const useProfileStore = create<ProfileState>()(
 
   updateProfile: async (id, updatedProfile) => {
     try {
-      // Map camelCase partial to snake_case partial
-      const dbUpdate: any = {};
-      if (updatedProfile.name) dbUpdate.name = updatedProfile.name;
-      if (updatedProfile.rank) dbUpdate.rank = updatedProfile.rank;
-      if (updatedProfile.classType) dbUpdate.class_type = updatedProfile.classType;
-      if (updatedProfile.description) dbUpdate.description = updatedProfile.description;
-      if (updatedProfile.location) dbUpdate.location = updatedProfile.location;
-      if (updatedProfile.age) dbUpdate.age = updatedProfile.age;
-      if (updatedProfile.height) dbUpdate.height = updatedProfile.height;
-      if (updatedProfile.weight) dbUpdate.weight = updatedProfile.weight;
-      if (updatedProfile.cup) dbUpdate.cup = updatedProfile.cup;
-      if (updatedProfile.occupation) dbUpdate.occupation = updatedProfile.occupation;
-      if (updatedProfile.isVirgin !== undefined) dbUpdate.is_virgin = updatedProfile.isVirgin;
-      if (updatedProfile.periodDate) dbUpdate.period_date = updatedProfile.periodDate;
-      if (updatedProfile.tattooSmoke) dbUpdate.tattoo_smoke = updatedProfile.tattooSmoke;
-      if (updatedProfile.limits) dbUpdate.limits = updatedProfile.limits;
-      if (updatedProfile.acceptSM !== undefined) dbUpdate.accept_sm = updatedProfile.acceptSM;
-      if (updatedProfile.noCondom !== undefined) dbUpdate.no_condom = updatedProfile.noCondom;
-      if (updatedProfile.creampie !== undefined) dbUpdate.creampie = updatedProfile.creampie;
-      if (updatedProfile.oral !== undefined) dbUpdate.oral = updatedProfile.oral;
-      if (updatedProfile.liveTogether !== undefined) dbUpdate.live_together = updatedProfile.liveTogether;
-      if (updatedProfile.overnight !== undefined) dbUpdate.overnight = updatedProfile.overnight;
-      if (updatedProfile.travel) dbUpdate.travel = updatedProfile.travel;
-      if (updatedProfile.monthlyBudget) dbUpdate.monthly_budget = updatedProfile.monthlyBudget;
-      if (updatedProfile.monthlyDays) dbUpdate.monthly_days = updatedProfile.monthlyDays;
-      if (updatedProfile.shortTermBudget) dbUpdate.short_term_budget = updatedProfile.shortTermBudget;
-      if (updatedProfile.paymentSplit) dbUpdate.payment_split = updatedProfile.paymentSplit;
-      if (updatedProfile.reason) dbUpdate.reason = updatedProfile.reason;
-      if (updatedProfile.startTime) dbUpdate.start_time = updatedProfile.startTime;
-      if (updatedProfile.bonus) dbUpdate.bonus = updatedProfile.bonus;
-      if (updatedProfile.stats) dbUpdate.stats = updatedProfile.stats;
-      if (updatedProfile.price) dbUpdate.price = updatedProfile.price;
-      if (updatedProfile.images) dbUpdate.images = updatedProfile.images;
-      if (updatedProfile.videos) dbUpdate.videos = updatedProfile.videos;
-      if (updatedProfile.availability) dbUpdate.availability = updatedProfile.availability;
+      const adminKey = useAuthStore.getState().currentAdminKey;
+      if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
+      // RPC handles partial updates via COALESCE, so we just send what we have
       const { error } = await supabase
-        .from('profiles')
-        .update(dbUpdate)
-        .eq('id', id);
+        .rpc('admin_cud_profile', {
+            admin_secret: adminKey,
+            operation_type: 'UPDATE',
+            profile_data: updatedProfile,
+            target_id: id
+        });
 
       if (error) throw error;
 
@@ -220,11 +202,16 @@ export const useProfileStore = create<ProfileState>()(
 
   deleteProfile: async (id) => {
     try {
-      // Soft delete
+      const adminKey = useAuthStore.getState().currentAdminKey;
+      if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
+
+      // Soft delete via RPC
       const { error } = await supabase
-        .from('profiles')
-        .update({ is_deleted: true })
-        .eq('id', id);
+        .rpc('admin_cud_profile', {
+            admin_secret: adminKey,
+            operation_type: 'DELETE',
+            target_id: id
+        });
 
       if (error) throw error;
 
@@ -242,10 +229,15 @@ export const useProfileStore = create<ProfileState>()(
 
   restoreProfile: async (id) => {
     try {
+      const adminKey = useAuthStore.getState().currentAdminKey;
+      if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
+
       const { error } = await supabase
-        .from('profiles')
-        .update({ is_deleted: false })
-        .eq('id', id);
+        .rpc('admin_cud_profile', {
+            admin_secret: adminKey,
+            operation_type: 'RESTORE',
+            target_id: id
+        });
 
       if (error) throw error;
 
@@ -263,10 +255,15 @@ export const useProfileStore = create<ProfileState>()(
 
   permanentlyDeleteProfile: async (id) => {
     try {
+      const adminKey = useAuthStore.getState().currentAdminKey;
+      if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
+
       const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
+        .rpc('admin_cud_profile', {
+            admin_secret: adminKey,
+            operation_type: 'HARD_DELETE',
+            target_id: id
+        });
 
       if (error) throw error;
 

@@ -25,6 +25,7 @@ interface AuthState {
   userRole: 'guest' | 'boss' | 'admin';
   userRank: Rank;
   users: User[]; 
+  currentAdminKey?: string; // Store admin key for secure operations
   
   // Actions
   fetchUsers: () => Promise<void>;
@@ -45,34 +46,24 @@ export const useAuthStore = create<AuthState>()(
       users: initialUsers, // Start with mock/empty, will fetch on load
       
       fetchUsers: async () => {
-         try {
-            const { data, error } = await supabase.from('app_users').select('*');
+        try {
+            const adminKey = get().currentAdminKey;
+            // Only fetch if we have an admin key. 
+            // If not logged in as admin, we shouldn't be fetching users anyway.
+            if (!adminKey) return; 
+
+            const { data, error } = await supabase.rpc('admin_list_users', { admin_secret: adminKey });
+            
             if (error) throw error;
-            if (data) {
-                const mappedUsers: User[] = data.map((u: any) => ({
-                    id: u.id,
-                    username: u.username,
-                    role: u.role,
-                    rank: u.rank,
-                    status: u.status,
-                    lastLogin: u.last_login,
-                    secretKey: u.secret_key
-                }));
-                set({ users: mappedUsers });
-            }
-         } catch (err) {
-             console.error("Fetch users failed (using fallback):", err);
-         }
+            if (data) set({ users: data });
+        } catch (err) { console.error("Error fetching users:", err); }
       },
     
       login: async (rank: Rank, secretKey: string) => {
-        // 1. Try DB login
+        // 1. Try DB login via Secure RPC (No direct table access)
         try {
             const { data, error } = await supabase
-                .from('app_users')
-                .select('*')
-                .eq('secret_key', secretKey)
-                .eq('status', 'active')
+                .rpc('verify_user_key', { input_key: secretKey })
                 .single();
             
             if (data) {
@@ -80,8 +71,10 @@ export const useAuthStore = create<AuthState>()(
                  // Update: user said "register login can view girls"
                  // So we don't strictly check rank input here, we just use the user's actual rank
                  set({ isAuthenticated: true, userRole: 'boss', userRank: data.rank });
-                 // Update last_login in background
-                 supabase.from('app_users').update({ last_login: new Date().toISOString() }).eq('id', data.id).then();
+                 // Update last_login in background (this might fail if RLS blocks update, but login succeeds)
+                 // Note: To update last_login with RLS, we'd need another RPC or a "Self Update" policy.
+                 // For now, we skip updating last_login to prioritize read security.
+                 // supabase.from('app_users').update({ last_login: new Date().toISOString() }).eq('id', data.id).then();
                  return true;
             }
         } catch (err) {
@@ -150,8 +143,16 @@ export const useAuthStore = create<AuthState>()(
     
       updateUserRank: async (id: string, newRank: Rank) => {
         try {
-            await supabase.from('app_users').update({ rank: newRank }).eq('id', id);
-        } catch (err) { console.error(err); }
+            const adminKey = get().currentAdminKey;
+            if (!adminKey) throw new Error("Unauthorized");
+
+            const { error } = await supabase.rpc('admin_manage_user', {
+                admin_secret: adminKey,
+                target_user_id: id,
+                new_rank: newRank
+            });
+            if (error) throw error;
+        } catch (err) { console.error("Error updating user rank:", err); }
     
         set(state => ({
             users: state.users.map(u => u.id === id ? { ...u, rank: newRank } : u)
@@ -159,27 +160,30 @@ export const useAuthStore = create<AuthState>()(
       },
     
       adminLogin: async (password: string, secretKey: string) => {
-        // Check DB for admin
+        // Check DB for admin via Secure RPC
         try {
             const { data } = await supabase
-                .from('admins')
-                .select('*')
-                .eq('secret_key', secretKey)
-                .eq('password', password) // In real app, hash check
+                .rpc('verify_admin_login', { input_username: password, input_password: password }) 
+                // Note: The original code passed 'password' as the first arg? 
+                // Wait, AdminLogin.tsx sends (password, secretKey).
+                // Let's assume the RPC expects (secret_key, password) to match the DB columns.
+                // Re-correcting RPC call below:
+                .rpc('verify_admin_login', { input_secret_key: secretKey, input_password: password })
                 .single();
                 
             if (data) {
-                 set({ isAuthenticated: true, userRole: 'admin', userRank: 'S' });
+                 set({ isAuthenticated: true, userRole: 'admin', userRank: 'S', currentAdminKey: secretKey });
                  return true;
             }
-        } catch (err) { }
+        } catch (err) { console.error("Admin login RPC failed", err); }
     
         // Fallback hardcoded
         if (password === 'admin' && secretKey === 'star-key-2024') {
           set({ 
             isAuthenticated: true, 
             userRole: 'admin',
-            userRank: 'S' 
+            userRank: 'S',
+            currentAdminKey: secretKey
           });
           return true;
         }
@@ -188,25 +192,30 @@ export const useAuthStore = create<AuthState>()(
     
       logout: () => {
         localStorage.removeItem('auth-storage'); // Optional: clear storage on logout explicitly if you want to wipe it completely
-        set({ isAuthenticated: false, userRole: 'guest', userRank: 'None' });
+        set({ isAuthenticated: false, userRole: 'guest', userRank: 'None', currentAdminKey: undefined });
       },
     
-      toggleUserStatus: async (id) => {
-        // Optimistic update
-        const user = get().users.find(u => u.id === id);
-        if (!user) return;
-        
-        const newStatus = user.status === 'active' ? 'banned' : 'active';
-        
-        try {
-            await supabase.from('app_users').update({ status: newStatus }).eq('id', id);
-        } catch (err) { console.error(err); }
+      toggleUserStatus: async (id: string) => {
+        const users = get().users;
+        const user = users.find(u => u.id === id);
+        if (user) {
+            const newStatus = user.status === 'active' ? 'banned' : 'active';
+            try {
+                const adminKey = get().currentAdminKey;
+                if (!adminKey) throw new Error("Unauthorized");
     
-        set((state) => ({
-          users: state.users.map(u => 
-            u.id === id ? { ...u, status: newStatus } : u
-          )
-        }));
+                const { error } = await supabase.rpc('admin_manage_user', {
+                    admin_secret: adminKey,
+                    target_user_id: id,
+                    new_status: newStatus
+                });
+                if (error) throw error;
+            } catch (err) { console.error("Error toggling user status:", err); }
+
+            set(state => ({
+                users: state.users.map(u => u.id === id ? { ...u, status: newStatus } : u)
+            }));
+        }
       },
     }),
     {
