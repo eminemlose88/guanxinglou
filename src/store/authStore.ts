@@ -14,12 +14,6 @@ export interface User {
   secretKey?: string; 
 }
 
-// Mock initial users for fallback
-const initialUsers: User[] = [
-  { id: '1', username: 'boss_s_01', role: 'boss', rank: 'VIP', status: 'active', lastLogin: '2024-01-15', secretKey: 'key-s-boss' },
-  { id: '2', username: 'vip_a_02', role: 'boss', rank: 'Common', status: 'active', lastLogin: '2024-01-14', secretKey: 'key-a-vip' },
-];
-
 interface AuthState {
   isAuthenticated: boolean;
   userRole: 'guest' | 'boss' | 'admin';
@@ -43,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       userRole: 'guest',
       userRank: 'None',
-      users: initialUsers, // Start with mock/empty, will fetch on load
+      users: [], // Start empty, rely on fetchUsers
       
       fetchUsers: async () => {
         try {
@@ -78,14 +72,7 @@ export const useAuthStore = create<AuthState>()(
                  return true;
             }
         } catch (err) {
-            console.warn("DB login failed, falling back to local/mock:", err);
-        }
-    
-        // 2. Fallback to local users state (including mock data)
-        const user = get().users.find(u => u.secretKey === secretKey && u.status === 'active');
-        if (user) {
-            set({ isAuthenticated: true, userRole: 'boss', userRank: user.rank });
-            return true;
+            console.warn("DB login failed:", err);
         }
     
         return false;
@@ -124,18 +111,8 @@ export const useAuthStore = create<AuthState>()(
                 set(state => ({ users: [...state.users, newUser] }));
             }
         } catch (err) {
-            console.error("DB register failed, using local fallback:", err);
-            // Fallback
-            const newUser: User = {
-                id: Date.now().toString(),
-                username,
-                role: 'boss',
-                rank: 'Common',
-                status: 'active',
-                lastLogin: new Date().toISOString(),
-                secretKey: newKey
-            };
-            set(state => ({ users: [...state.users, newUser] }));
+            console.error("DB register failed:", err);
+            // No fallback, registration must succeed in DB
         }
         
         return newKey;
@@ -172,16 +149,6 @@ export const useAuthStore = create<AuthState>()(
             }
         } catch (err) { console.error("Admin login RPC failed", err); }
     
-        // Fallback hardcoded
-        if (password === 'admin' && secretKey === 'star-key-2024') {
-          set({ 
-            isAuthenticated: true, 
-            userRole: 'admin',
-            userRank: 'S',
-            currentAdminKey: secretKey
-          });
-          return true;
-        }
         return false;
       },
     

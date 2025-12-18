@@ -53,7 +53,7 @@ export const useProfileStore = create<ProfileState>()(
           
           // Map snake_case from DB to camelCase for frontend
           if (!data || data.length === 0) {
-            set({ profiles: initialMockProfiles, loading: false, lastFetched: now });
+            set({ profiles: [], loading: false, lastFetched: now });
           } else {
             const mappedProfiles: Profile[] = data.map((p: any) => ({
               id: p.id,
@@ -96,8 +96,8 @@ export const useProfileStore = create<ProfileState>()(
           }
         } catch (err: any) {
           console.error('Error fetching profiles:', err);
-          // Fallback to mock data if connection fails (for demo stability)
-          set({ profiles: initialMockProfiles, loading: false, error: err.message, lastFetched: now });
+          // Stop loading, keep existing profiles or empty if none
+          set({ loading: false, error: err.message, lastFetched: now });
         }
       },
 
