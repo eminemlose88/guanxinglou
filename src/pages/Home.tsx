@@ -26,7 +26,7 @@ export const Home: React.FC = () => {
               突破 · 界限 <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-system-blue to-purple-600">掌控世界</span>
             </h1>
             <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-              欢迎来到观星楼。精英陪伴与S级人才的首选之地。
+              欢迎来到观星楼。精英陪伴与顶级人才的首选之地。
             </p>
             
             <Link 

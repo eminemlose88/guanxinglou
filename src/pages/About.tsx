@@ -38,7 +38,7 @@ export const About: React.FC = () => {
             </div>
             <h3 className="text-2xl font-bold mb-4">极致尊贵</h3>
             <p className="text-gray-400 leading-relaxed">
-              每一位入驻观星楼的“星辰”都经过S级严苛筛选。颜值、才艺、素养，缺一不可。只为匹配您的王者身份。
+              每一位入驻观星楼的“星辰”都经过严苛筛选。颜值、才艺、素养，缺一不可。只为匹配您的王者身份。
             </p>
           </motion.div>
 

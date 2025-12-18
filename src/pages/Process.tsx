@@ -7,7 +7,7 @@ export const Process: React.FC = () => {
     {
       icon: <UserPlus className="w-8 h-8" />,
       title: "身份认证",
-      desc: "注册并验证您的老板身份。只有通过资产验证的精英才能获得S级权限。"
+      desc: "注册并验证您的老板身份。只有通过资产验证的精英才能获得VIP权限。"
     },
     {
       icon: <Search className="w-8 h-8" />,
