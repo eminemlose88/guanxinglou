@@ -13,6 +13,7 @@ DROP POLICY IF EXISTS "Public Access" ON profiles;
 
 -- 3. Create Safe Policies
 -- Profiles: Public can READ, but NOT write (Write is handled via secure RPC)
+DROP POLICY IF EXISTS "Public Read Profiles" ON profiles;
 CREATE POLICY "Public Read Profiles" ON profiles FOR SELECT USING (true);
 
 -- App Users & Admins: NO public access policies.

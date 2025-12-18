@@ -15,6 +15,7 @@ ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 -- Policies
 
 -- 1. Public can INSERT messages (Anonymous Guestbook)
+DROP POLICY IF EXISTS "Public Insert Messages" ON contact_messages;
 CREATE POLICY "Public Insert Messages" ON contact_messages
     FOR INSERT WITH CHECK (true);
 
