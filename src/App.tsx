@@ -19,12 +19,11 @@ import { useAuthStore } from './store/authStore';
 import { useProfileStore } from './store/profileStore';
 
 function App() {
-  const fetchUsers = useAuthStore((state) => state.fetchUsers);
   const fetchProfiles = useProfileStore((state) => state.fetchProfiles);
 
   useEffect(() => {
     // Initial Data Load
-    fetchUsers();
+    // fetchUsers() removed from here to prevent exposing user data on public pages
     fetchProfiles();
   }, []);
 

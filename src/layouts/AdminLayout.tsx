@@ -5,15 +5,18 @@ import { LayoutDashboard, Users, UserCog, LogOut, Shield } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const AdminLayout: React.FC = () => {
-  const { isAuthenticated, userRole, logout } = useAuthStore();
+  const { isAuthenticated, userRole, logout, fetchUsers } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   React.useEffect(() => {
     if (!isAuthenticated || userRole !== 'admin') {
       navigate('/admin/login');
+    } else {
+      // Fetch users only when authenticated as admin
+      fetchUsers();
     }
-  }, [isAuthenticated, userRole, navigate]);
+  }, [isAuthenticated, userRole, navigate, fetchUsers]);
 
   if (!isAuthenticated || userRole !== 'admin') return null;
 
