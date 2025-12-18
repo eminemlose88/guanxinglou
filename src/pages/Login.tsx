@@ -16,6 +16,11 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const turnstile = useTurnstile();
 
+  // Use Test Key in Development, Real Key in Production
+  const siteKey = import.meta.env.DEV 
+    ? "1x00000000000000000000AA" 
+    : (import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA");
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!captchaToken) {
@@ -75,7 +80,7 @@ export const Login: React.FC = () => {
               <label className="block text-xs font-mono text-system-blue mb-2">人机验证</label>
               <div className="flex justify-center bg-black/50 border border-white/20 rounded p-2">
                   <Turnstile
-                      sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                      sitekey={siteKey}
                       onVerify={(token) => setCaptchaToken(token)}
                       theme="dark"
                   />

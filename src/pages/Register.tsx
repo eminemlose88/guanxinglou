@@ -14,6 +14,11 @@ export const Register: React.FC = () => {
   const navigate = useNavigate();
   const turnstile = useTurnstile();
 
+  // Use Test Key in Development, Real Key in Production
+  const siteKey = import.meta.env.DEV 
+    ? "1x00000000000000000000AA" 
+    : (import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA");
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
@@ -84,7 +89,7 @@ export const Register: React.FC = () => {
                 <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">人机验证</label>
                 <div className="flex justify-center bg-black border border-white/10 rounded-lg p-2">
                     <Turnstile
-                        sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                        sitekey={siteKey}
                         onVerify={(token) => setCaptchaToken(token)}
                         theme="dark"
                     />
