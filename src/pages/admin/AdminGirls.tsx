@@ -121,8 +121,14 @@ export const AdminGirls: React.FC = () => {
     setUpload(true);
     const file = event.target.files[0];
     
+    // Enforce correct MIME type based on extension if browser fails to detect it or detects incorrectly
+    const correctMimeType = getMimeType(file.name);
+    const fileToUpload = (correctMimeType && file.type !== correctMimeType) 
+        ? file.slice(0, file.size, correctMimeType) 
+        : file;
+
     try {
-      const newBlob = await upload(file.name, file, {
+      const newBlob = await upload(file.name, fileToUpload, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       });
@@ -147,8 +153,14 @@ export const AdminGirls: React.FC = () => {
     setUploadVideo(true);
     const file = event.target.files[0];
     
+    // Enforce correct MIME type based on extension if browser fails to detect it or detects incorrectly
+    const correctMimeType = getMimeType(file.name);
+    const fileToUpload = (correctMimeType && file.type !== correctMimeType) 
+        ? file.slice(0, file.size, correctMimeType) 
+        : file;
+
     try {
-      const newBlob = await upload(file.name, file, {
+      const newBlob = await upload(file.name, fileToUpload, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       });
@@ -183,6 +195,23 @@ export const AdminGirls: React.FC = () => {
         [stat]: parseInt(value) || 0 
       }
     }));
+  };
+
+  const getMimeType = (fileName: string): string | null => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (!ext) return null;
+    
+    const mimeMap: Record<string, string> = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'mov': 'video/quicktime'
+    };
+    return mimeMap[ext] || null;
   };
 
   return (
