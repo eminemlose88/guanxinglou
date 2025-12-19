@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProfileStore } from '../store/profileStore';
 import { useAuthStore } from '../store/authStore';
-import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, Lock, MapPin, Ruler, Weight, Calendar, Heart, AlertTriangle, Plane, Clock, DollarSign, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, CheckCircle, Lock, MapPin, Ruler, Weight, Calendar, Heart, AlertTriangle, Plane, Clock, DollarSign, Star, X } from 'lucide-react';
 
 export const ProfileDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, isAdminAuthenticated, userRank, userRole } = useAuthStore();
   const { getProfile } = useProfileStore();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const profile = getProfile(id || '');
 
@@ -110,13 +111,41 @@ export const ProfileDetail: React.FC = () => {
                    ))}
                    {/* Images - Visible to all logged in */}
                    {profile.images?.slice(1).map((img, idx) => (
-                     <div key={`img-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50">
+                     <div key={`img-${idx}`} className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10 bg-black/50 cursor-pointer" onClick={() => setSelectedImage(img)}>
                         <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
                      </div>
                    ))}
                  </div>
               </section>
             )}
+
+            {/* Image Lightbox */}
+            <AnimatePresence>
+              {selectedImage && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedImage(null)}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 cursor-zoom-out"
+                >
+                  <motion.img
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.9 }}
+                    src={selectedImage}
+                    alt="Full size"
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl shadow-black/50"
+                  />
+                  <button
+                    className="absolute top-6 right-6 text-white/70 hover:text-white p-2 bg-black/50 rounded-full backdrop-blur-sm"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* 1. Basic Stats Grid */}
             <section>
