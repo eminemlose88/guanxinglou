@@ -18,6 +18,9 @@ export const Gallery: React.FC = () => {
     if (userRank === 'None') return [];
 
     return profiles.filter(p => {
+      // Filter out deleted profiles
+      if (p.isDeleted) return false;
+
       // Filter by Search
       const nameMatch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
       const occupationMatch = (p.occupation || '').toLowerCase().includes(searchTerm.toLowerCase());
