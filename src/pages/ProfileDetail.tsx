@@ -21,17 +21,28 @@ export const ProfileDetail: React.FC = () => {
   const showLockedContent = isAuthenticated && !isVip;
   const canViewContent = isAuthenticated && isVip;
 
-  const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => (
-    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5">
-      <div className="text-gray-400">{icon}</div>
-      <div>
-        <div className="text-[10px] text-gray-500 uppercase">{label}</div>
-        <div className="text-sm font-bold text-white">
-          {typeof value === 'boolean' ? (value ? '是' : '否') : value || '-'}
+  const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => {
+    // Robustness check: if value is null/undefined/empty string, display "无"
+    let displayValue: React.ReactNode = '-';
+    
+    if (typeof value === 'boolean') {
+        displayValue = value ? '是' : '否';
+    } else if (value === 0 || (value && String(value).trim() !== '')) {
+        displayValue = value;
+    }
+
+    return (
+      <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5">
+        <div className="text-gray-400">{icon}</div>
+        <div>
+          <div className="text-[10px] text-gray-500 uppercase">{label}</div>
+          <div className="text-sm font-bold text-white">
+            {displayValue}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-hidden flex flex-col md:flex-row">
@@ -160,11 +171,11 @@ export const ProfileDetail: React.FC = () => {
                  <div className="space-y-3">
                     <div className="flex gap-2">
                        <span className="text-gray-500 text-sm whitespace-nowrap">纹身/抽烟:</span>
-                       <span className="text-white text-sm">{profile.tattooSmoke}</span>
+                       <span className="text-white text-sm">{profile.tattooSmoke || '无'}</span>
                     </div>
                     <div className="flex gap-2">
                        <span className="text-red-400 text-sm whitespace-nowrap">雷点禁忌:</span>
-                       <span className="text-red-300 text-sm">{profile.limits}</span>
+                       <span className="text-red-300 text-sm">{profile.limits || '无'}</span>
                     </div>
                  </div>
               </div>
@@ -176,15 +187,15 @@ export const ProfileDetail: React.FC = () => {
                <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4">
                   <div>
                     <span className="text-xs text-system-blue font-bold uppercase mb-1 block">加分项</span>
-                    <p className="text-white">{profile.bonus}</p>
+                    <p className="text-white">{profile.bonus || '暂无描述'}</p>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500 font-bold uppercase mb-1 block">个人描述</span>
-                    <p className="text-gray-300 leading-relaxed text-sm">{profile.description}</p>
+                    <p className="text-gray-300 leading-relaxed text-sm">{profile.description || '暂无描述'}</p>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500 font-bold uppercase mb-1 block">寻主原因</span>
-                    <p className="text-gray-400 italic text-sm">"{profile.reason}"</p>
+                    <p className="text-gray-400 italic text-sm">"{profile.reason || '暂无描述'}"</p>
                   </div>
                </div>
             </section>
