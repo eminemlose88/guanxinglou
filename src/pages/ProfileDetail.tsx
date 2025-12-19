@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle, Lock, MapPin, Ruler, Weight, Calendar, Heart, A
 export const ProfileDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, userRank, userRole } = useAuthStore();
+  const { isAuthenticated, isAdminAuthenticated, userRank, userRole } = useAuthStore();
   const { getProfile } = useProfileStore();
   
   const profile = getProfile(id || '');
@@ -17,9 +17,9 @@ export const ProfileDetail: React.FC = () => {
     return <div className="text-center py-20">未找到档案</div>;
   }
 
-  const isVip = userRank === 'VIP' || userRole === 'admin' || userRole === 'boss'; // Boss role is legacy, effectively VIP
+  const isVip = userRank === 'VIP' || isAdminAuthenticated || userRole === 'admin' || userRole === 'boss'; // Boss role is legacy, effectively VIP
   const showLockedContent = isAuthenticated && !isVip;
-  const canViewContent = isAuthenticated && isVip;
+  const canViewContent = (isAuthenticated || isAdminAuthenticated) && isVip;
 
   const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number | boolean }) => {
     // Robustness check: if value is null/undefined/empty string, display "无"

@@ -15,8 +15,9 @@ export interface User {
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
-  userRole: 'guest' | 'boss' | 'admin';
+  isAuthenticated: boolean; // User authentication status
+  isAdminAuthenticated: boolean; // Admin authentication status
+  userRole: 'guest' | 'boss' | 'admin'; // Kept for legacy/UI, but mostly for User role now
   userRank: Rank;
   users: User[]; 
   currentAdminKey?: string; // Store admin key for secure operations
@@ -27,7 +28,10 @@ interface AuthState {
   register: (username: string) => Promise<string>; 
   updateUserRank: (id: string, newRank: Rank) => Promise<void>;
   adminLogin: (password: string, secretKey: string) => Promise<boolean>;
-  logout: () => void;
+  logoutUser: () => void;
+  logoutAdmin: () => void;
+  // Deprecated single logout, keep for safety if needed or remove
+  logout: () => void; 
   toggleUserStatus: (id: string) => Promise<void>;
 }
 
@@ -35,15 +39,14 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       isAuthenticated: false,
+      isAdminAuthenticated: false,
       userRole: 'guest',
       userRank: 'None',
-      users: [], // Start empty, rely on fetchUsers
+      users: [], 
       
       fetchUsers: async () => {
         try {
             const adminKey = get().currentAdminKey;
-            // Only fetch if we have an admin key. 
-            // If not logged in as admin, we shouldn't be fetching users anyway.
             if (!adminKey) return; 
 
             const { data, error } = await supabase.rpc('admin_list_users', { admin_secret: adminKey });
@@ -54,21 +57,13 @@ export const useAuthStore = create<AuthState>()(
       },
     
       login: async (rank: Rank, secretKey: string) => {
-        // 1. Try DB login via Secure RPC (No direct table access)
         try {
             const { data, error } = await supabase
                 .rpc('verify_user_key', { input_key: secretKey })
                 .single();
             
             if (data) {
-                 // Ignore rank check for login, just check if active and key matches
-                 // Update: user said "register login can view girls"
-                 // So we don't strictly check rank input here, we just use the user's actual rank
                  set({ isAuthenticated: true, userRole: 'boss', userRank: (data as any).rank });
-                 // Update last_login in background (this might fail if RLS blocks update, but login succeeds)
-                 // Note: To update last_login with RLS, we'd need another RPC or a "Self Update" policy.
-                 // For now, we skip updating last_login to prioritize read security.
-                 // supabase.from('app_users').update({ last_login: new Date().toISOString() }).eq('id', data.id).then();
                  return true;
             }
         } catch (err) {
@@ -82,8 +77,6 @@ export const useAuthStore = create<AuthState>()(
         const newKey = `key-${Math.random().toString(36).substr(2, 9)}`;
         
         try {
-            // Note: We are using the new secure RPC 'secure_register_user' which handles rate limiting.
-            // Direct insert into 'app_users' is now revoked for security.
             const { data, error } = await supabase
                 .rpc('secure_register_user', {
                     input_username: username,
@@ -93,9 +86,7 @@ export const useAuthStore = create<AuthState>()(
             
             if (error) throw error;
             
-            // Update local state
             if (data) {
-                 // The RPC returns jsonb, we need to cast it to our User type
                  const u: any = data;
                  const newUser: User = {
                     id: u.id,
@@ -110,8 +101,7 @@ export const useAuthStore = create<AuthState>()(
             }
         } catch (err) {
             console.error("DB register failed:", err);
-            // No fallback, registration must succeed in DB
-            throw err; // Propagate error to UI
+            throw err; 
         }
         
         return newKey;
@@ -136,14 +126,16 @@ export const useAuthStore = create<AuthState>()(
       },
     
       adminLogin: async (password: string, secretKey: string) => {
-        // Check DB for admin via Secure RPC
         try {
             const { data } = await supabase
                 .rpc('verify_admin_login', { input_secret_key: secretKey, input_password: password })
                 .single();
                 
             if (data) {
-                 set({ isAuthenticated: true, userRole: 'admin', userRank: 'S', currentAdminKey: secretKey });
+                 // Only update Admin state
+                 set({ isAdminAuthenticated: true, currentAdminKey: secretKey });
+                 // Optionally set userRole to admin if we want the UI to reflect it, 
+                 // but we are separating concerns. Let's keep userRole for "User Context".
                  return true;
             }
         } catch (err) { console.error("Admin login RPC failed", err); }
@@ -151,9 +143,18 @@ export const useAuthStore = create<AuthState>()(
         return false;
       },
     
+      logoutUser: () => {
+        set({ isAuthenticated: false, userRole: 'guest', userRank: 'None' });
+      },
+
+      logoutAdmin: () => {
+        set({ isAdminAuthenticated: false, currentAdminKey: undefined });
+      },
+
       logout: () => {
-        localStorage.removeItem('auth-storage'); // Optional: clear storage on logout explicitly if you want to wipe it completely
-        set({ isAuthenticated: false, userRole: 'guest', userRank: 'None', currentAdminKey: undefined });
+         // Legacy: clear both? Or just user?
+         // Let's clear both to be safe for legacy calls, but we will replace usages.
+         set({ isAuthenticated: false, isAdminAuthenticated: false, userRole: 'guest', userRank: 'None', currentAdminKey: undefined });
       },
     
       toggleUserStatus: async (id: string) => {
@@ -184,10 +185,11 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
         isAuthenticated: state.isAuthenticated, 
+        isAdminAuthenticated: state.isAdminAuthenticated,
         userRole: state.userRole, 
         userRank: state.userRank,
         currentAdminKey: state.currentAdminKey
-      }), // Persist authentication state and admin key
+      }), 
     }
   )
 );

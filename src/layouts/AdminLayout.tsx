@@ -5,20 +5,20 @@ import { LayoutDashboard, Users, UserCog, LogOut, Shield, MessageSquare } from '
 import { clsx } from 'clsx';
 
 export const AdminLayout: React.FC = () => {
-  const { isAuthenticated, userRole, logout, fetchUsers } = useAuthStore();
+  const { isAdminAuthenticated, logoutAdmin, fetchUsers } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   React.useEffect(() => {
-    if (!isAuthenticated || userRole !== 'admin') {
+    if (!isAdminAuthenticated) {
       navigate('/admin/login');
     } else {
       // Fetch users only when authenticated as admin
       fetchUsers();
     }
-  }, [isAuthenticated, userRole, navigate, fetchUsers]);
+  }, [isAdminAuthenticated, navigate, fetchUsers]);
 
-  if (!isAuthenticated || userRole !== 'admin') return null;
+  if (!isAdminAuthenticated) return null;
 
   const menuItems = [
     { path: '/admin/dashboard', label: '概览', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -56,7 +56,7 @@ export const AdminLayout: React.FC = () => {
 
         <div className="p-4 border-t border-white/10">
           <button 
-            onClick={() => { logout(); navigate('/admin/login'); }}
+            onClick={() => { logoutAdmin(); navigate('/admin/login'); }}
             className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 w-full hover:bg-red-500/10 rounded transition-colors"
           >
             <LogOut className="w-5 h-5" />

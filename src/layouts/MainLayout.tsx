@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 export const MainLayout: React.FC = () => {
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logoutUser } = useAuthStore();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -45,7 +45,7 @@ export const MainLayout: React.FC = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-4 ml-4 border-l border-white/10 pl-4">
                 <span className="text-xs text-rank-gold border border-rank-gold/30 px-2 py-1 rounded">老板通道</span>
-                <button onClick={logout} className="text-gray-400 hover:text-white" title="退出">
+                <button onClick={logoutUser} className="text-gray-400 hover:text-white" title="退出">
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
@@ -90,7 +90,7 @@ export const MainLayout: React.FC = () => {
               ))}
               <div className="pt-4">
                  {isAuthenticated ? (
-                    <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 text-red-400">
+                    <button onClick={() => { logoutUser(); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 text-red-400">
                        <LogOut className="w-5 h-5" /> 退出登录
                     </button>
                  ) : (
