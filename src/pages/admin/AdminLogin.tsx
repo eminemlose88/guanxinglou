@@ -3,34 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { motion } from 'framer-motion';
 import { Lock, Key, ChevronRight, ShieldCheck } from 'lucide-react';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 export const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaError, setCaptchaError] = useState(false);
   const adminLogin = useAuthStore((state) => state.adminLogin);
   const navigate = useNavigate();
 
-  // Hardcode Site Key to ensure it works
-  const siteKey = "0x4AAAAAACHeKhWszKULsMS4";
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captchaToken) {
-        setCaptchaError(true);
-        setTimeout(() => setCaptchaError(false), 3000);
-        return;
-    }
 
     if (await adminLogin(password, secretKey)) {
       navigate('/admin/dashboard');
     } else {
       setError(true);
-      // turnstile.reset();
-      setCaptchaToken(null);
       setTimeout(() => setError(false), 2000);
     }
   };
@@ -81,28 +68,6 @@ export const AdminLogin: React.FC = () => {
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-mono text-gray-500 mb-2 uppercase">安全验证</label>
-              <div className="flex justify-center bg-black border border-red-900/30 rounded p-2 min-h-[70px]">
-                  <Turnstile
-                      siteKey={siteKey}
-                      onSuccess={(token) => setCaptchaToken(token)}
-                      options={{ theme: 'dark' }}
-                  />
-              </div>
-            </div>
-
-            {captchaError && (
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-mono p-2 rounded text-center mb-4"
-              >
-                ⚠️ 安全警告：必须完成身份验证
-              </motion.div>
-            )}
 
             {error && (
               <p className="text-red-500 text-xs font-mono text-center">
