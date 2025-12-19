@@ -70,7 +70,13 @@ export const AdminGirls: React.FC = () => {
   const handleOpenModal = (profile?: Profile) => {
     if (profile) {
       setEditingId(profile.id);
-      setFormData(profile);
+      setFormData({
+        ...profile,
+        // Ensure arrays and objects are not null to prevent crashes
+        images: profile.images || [],
+        videos: profile.videos || [],
+        stats: profile.stats || { charm: 60, intelligence: 60, agility: 60 }
+      });
     } else {
       setEditingId(null);
       setFormData(initialFormState);
@@ -169,7 +175,13 @@ export const AdminGirls: React.FC = () => {
   const handleStatChange = (stat: 'charm' | 'intelligence' | 'agility', value: string) => {
     setFormData(prev => ({
       ...prev,
-      stats: { ...prev.stats!, [stat]: parseInt(value) || 0 }
+      stats: { 
+        charm: 0, 
+        intelligence: 0, 
+        agility: 0, 
+        ...(prev.stats || {}), 
+        [stat]: parseInt(value) || 0 
+      }
     }));
   };
 

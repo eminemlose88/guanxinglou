@@ -19,11 +19,11 @@ export const Gallery: React.FC = () => {
 
     return profiles.filter(p => {
       // Filter by Search
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.occupation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          p.location.toLowerCase().includes(searchTerm.toLowerCase());
+      const nameMatch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const occupationMatch = (p.occupation || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const locationMatch = (p.location || '').toLowerCase().includes(searchTerm.toLowerCase());
       
-      return matchSearch;
+      return nameMatch || occupationMatch || locationMatch;
     });
   }, [searchTerm, profiles, userRank]);
 
