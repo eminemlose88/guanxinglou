@@ -185,8 +185,9 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({ 
         isAuthenticated: state.isAuthenticated, 
         userRole: state.userRole, 
-        userRank: state.userRank 
-      }), // Persist only authentication state
+        userRank: state.userRank,
+        currentAdminKey: state.currentAdminKey
+      }), // Persist authentication state and admin key
     }
   )
 );
