@@ -43,14 +43,36 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     
     // Helper to safely parse JSON arrays
     const parseArray = (val: any): string[] => {
+        if (!val) return [];
         if (Array.isArray(val)) return val;
+        
         if (typeof val === 'string') {
+            const cleanVal = val.trim();
+            
+            // 1. Try PostgreSQL Array format: {url1,url2}
+            if (cleanVal.startsWith('{') && cleanVal.endsWith('}')) {
+                const content = cleanVal.slice(1, -1);
+                if (!content) return [];
+                // Simple comma split (assuming URLs don't contain commas)
+                // Also strip double quotes if PG added them
+                return content.split(',').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
+            }
+
+            // 2. Try JSON format
             try {
-                const parsed = JSON.parse(val);
+                const parsed = JSON.parse(cleanVal);
                 if (Array.isArray(parsed)) return parsed;
+                // Double JSON encoded case
+                if (typeof parsed === 'string') {
+                    try {
+                        const deepParsed = JSON.parse(parsed);
+                        if (Array.isArray(deepParsed)) return deepParsed;
+                    } catch {}
+                }
             } catch (e) {
-                // If parsing fails, and it's a non-empty string that looks like a URL, maybe wrap it?
-                // But safer to return empty array for now to avoid crashes.
+                // 3. Fallback: if it looks like a URL, wrap it
+                if (cleanVal.startsWith('http')) return [cleanVal];
+                
                 console.warn('Failed to parse array:', val);
             }
         }
@@ -131,10 +153,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
       // Sanitize Data: Ensure arrays are never null/undefined
+      // AND explicitly stringify arrays to ensure they are stored as JSON strings ["..."] 
+      // instead of PostgreSQL arrays {...} in text fields.
       const sanitizedProfile = {
           ...profile,
-          images: profile.images || [],
-          videos: profile.videos || [],
+          images: JSON.stringify(profile.images || []),
+          videos: JSON.stringify(profile.videos || []),
           stats: profile.stats || { charm: 60, intelligence: 60, agility: 60 }
       };
 
@@ -204,8 +228,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
       // Sanitize Partial Updates
       const sanitizedUpdate = { ...updatedProfile };
-      if (updatedProfile.images === null) sanitizedUpdate.images = [];
-      if (updatedProfile.videos === null) sanitizedUpdate.videos = [];
+      if (updatedProfile.images !== undefined) {
+          sanitizedUpdate.images = JSON.stringify(updatedProfile.images || []);
+      }
+      if (updatedProfile.videos !== undefined) {
+          sanitizedUpdate.videos = JSON.stringify(updatedProfile.videos || []);
+      }
       // Note: We don't force empty array if key is missing (undefined), 
       // because it's a partial update. Only if it's explicitly null.
 
