@@ -160,7 +160,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           images: JSON.stringify(profile.images || []),
           videos: JSON.stringify(profile.videos || []),
           stats: profile.stats || { charm: 60, intelligence: 60, agility: 60 }
-      };
+      } as any; // Cast to any to bypass TS checks for stringifying arrays
 
       const { data, error } = await supabase
         .rpc('admin_cud_profile', {
@@ -227,7 +227,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
       // Sanitize Partial Updates
-      const sanitizedUpdate = { ...updatedProfile };
+      const sanitizedUpdate = { ...updatedProfile } as any; // Cast to any to allow stringify assignment
       if (updatedProfile.images !== undefined) {
           sanitizedUpdate.images = JSON.stringify(updatedProfile.images || []);
       }
