@@ -66,6 +66,31 @@ export const AdminGirls: React.FC = () => {
   };
 
   const [formData, setFormData] = useState<Partial<Profile>>(initialFormState);
+  
+  // Draft Mechanism: Load draft on mount (only for new profiles)
+  React.useEffect(() => {
+    if (!editingId && isModalOpen) {
+        const savedDraft = localStorage.getItem('admin_profile_draft');
+        if (savedDraft) {
+            try {
+                const parsedDraft = JSON.parse(savedDraft);
+                setFormData(parsedDraft);
+            } catch (e) {
+                console.error("Failed to parse draft", e);
+            }
+        }
+    }
+  }, [isModalOpen, editingId]);
+
+  // Draft Mechanism: Save draft on change (only for new profiles)
+  React.useEffect(() => {
+    if (!editingId && isModalOpen) {
+        const timeoutId = setTimeout(() => {
+            localStorage.setItem('admin_profile_draft', JSON.stringify(formData));
+        }, 500); // Debounce save
+        return () => clearTimeout(timeoutId);
+    }
+  }, [formData, isModalOpen, editingId]);
 
   const handleOpenModal = (profile?: Profile) => {
     if (profile) {
@@ -79,7 +104,17 @@ export const AdminGirls: React.FC = () => {
       });
     } else {
       setEditingId(null);
-      setFormData(initialFormState);
+      // Try to load draft first, otherwise initial state
+      const savedDraft = localStorage.getItem('admin_profile_draft');
+      if (savedDraft) {
+         try {
+             setFormData(JSON.parse(savedDraft));
+         } catch {
+             setFormData(initialFormState);
+         }
+      } else {
+         setFormData(initialFormState);
+      }
     }
     setIsModalOpen(true);
   };
@@ -90,6 +125,8 @@ export const AdminGirls: React.FC = () => {
       await updateProfile(editingId, formData);
     } else {
       await addProfile(formData as Profile);
+      // Clear draft after successful add
+      localStorage.removeItem('admin_profile_draft');
     }
     setIsModalOpen(false);
   };

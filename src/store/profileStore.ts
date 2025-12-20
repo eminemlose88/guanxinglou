@@ -107,17 +107,19 @@ export const useProfileStore = create<ProfileState>()(
       const adminKey = useAuthStore.getState().currentAdminKey;
       if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
-      // Prepare payload for RPC
-      // Note: RPC expects camelCase keys in the JSON payload because we handle mapping inside the SQL or 
-      // actually the SQL uses ->>'name' etc. 
-      // My SQL script uses camelCase keys inside the JSON (profile_data->>'classType').
-      // So we can pass the profile object directly!
-      
+      // Sanitize Data: Ensure arrays are never null/undefined
+      const sanitizedProfile = {
+          ...profile,
+          images: profile.images || [],
+          videos: profile.videos || [],
+          stats: profile.stats || { charm: 60, intelligence: 60, agility: 60 }
+      };
+
       const { data, error } = await supabase
         .rpc('admin_cud_profile', {
             admin_secret: adminKey,
             operation_type: 'INSERT',
-            profile_data: profile
+            profile_data: sanitizedProfile
         });
 
       if (error) throw error;
@@ -177,19 +179,26 @@ export const useProfileStore = create<ProfileState>()(
       const adminKey = useAuthStore.getState().currentAdminKey;
       if (!adminKey) throw new Error("Unauthorized: Missing Admin Key");
 
+      // Sanitize Partial Updates
+      const sanitizedUpdate = { ...updatedProfile };
+      if (updatedProfile.images === null) sanitizedUpdate.images = [];
+      if (updatedProfile.videos === null) sanitizedUpdate.videos = [];
+      // Note: We don't force empty array if key is missing (undefined), 
+      // because it's a partial update. Only if it's explicitly null.
+
       // RPC handles partial updates via COALESCE, so we just send what we have
       const { error } = await supabase
         .rpc('admin_cud_profile', {
             admin_secret: adminKey,
             operation_type: 'UPDATE',
-            profile_data: updatedProfile,
+            profile_data: sanitizedUpdate,
             target_id: id
         });
 
       if (error) throw error;
 
       set((state) => ({
-        profiles: state.profiles.map((p) => (p.id === id ? { ...p, ...updatedProfile } : p)),
+        profiles: state.profiles.map((p) => (p.id === id ? { ...p, ...sanitizedUpdate } : p)),
       }));
     } catch (err: any) {
       console.error('Error updating profile:', err);
