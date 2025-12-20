@@ -9,13 +9,30 @@ export const ProfileDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, isAdminAuthenticated, userRank, userRole } = useAuthStore();
-  const { getProfile } = useProfileStore();
+  const { getProfile, fetchProfiles, profiles, loading } = useProfileStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
+  // Try to get profile from store
   const profile = getProfile(id || '');
 
+  // Effect: If profile is not found but we have an ID, try fetching from server
+  // This handles the "refresh page" scenario where Zustand store might be empty or stale
+  React.useEffect(() => {
+    if (id && !profile && !loading) {
+        fetchProfiles(true); // Force fetch
+    }
+  }, [id, profile, loading, fetchProfiles]);
+
+  if (loading && !profile) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-abyss text-system-blue">
+            <div className="animate-pulse">正在从加密数据库检索档案...</div>
+        </div>
+      );
+  }
+
   if (!profile) {
-    return <div className="text-center py-20">未找到档案</div>;
+    return <div className="text-center py-20 text-gray-500">未找到档案 (ID: {id})</div>;
   }
 
   const isVip = userRank === 'VIP' || isAdminAuthenticated || userRole === 'admin' || userRole === 'boss'; // Boss role is legacy, effectively VIP
