@@ -41,16 +41,23 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
     set({ loading: true });
     try {
+      console.log('Fetching profiles from Supabase...');
       // Fetch ALL profiles including deleted ones, let frontend filter
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+          console.error('Supabase fetch error:', error);
+          throw error;
+      }
       
+      console.log('Supabase raw data:', data);
+
       // Map snake_case from DB to camelCase for frontend
       if (!data || data.length === 0) {
+        console.warn('Supabase returned empty data. Check RLS policies if data exists in DB.');
         set({ profiles: [], loading: false, lastFetched: now });
       } else {
         const mappedProfiles: Profile[] = data.map((p: any) => ({
@@ -90,6 +97,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           availability: p.availability || 'Available',
           isDeleted: p.is_deleted || false
         }));
+        console.log('Mapped profiles:', mappedProfiles);
         set({ profiles: mappedProfiles, loading: false, lastFetched: now });
       }
     } catch (err: any) {

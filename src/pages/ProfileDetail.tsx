@@ -32,7 +32,32 @@ export const ProfileDetail: React.FC = () => {
   }
 
   if (!profile) {
-    return <div className="text-center py-20 text-gray-500">未找到档案 (ID: {id})</div>;
+    return (
+        <div className="flex flex-col items-center justify-center h-screen bg-abyss gap-4">
+            <div className="text-red-500 font-bold text-xl">无法加载档案</div>
+            <div className="text-gray-400 text-sm">
+                可能的原因：
+                <ul className="list-disc text-left mt-2 space-y-1">
+                    <li>档案 ID ({id}) 不存在</li>
+                    <li>您的网络连接不稳定</li>
+                    <li>服务器正在同步数据，请稍后刷新重试</li>
+                    <li>您没有权限查看此档案</li>
+                </ul>
+            </div>
+            <button 
+                onClick={() => fetchProfiles(true)} 
+                className="mt-4 px-4 py-2 bg-system-blue text-white rounded hover:bg-blue-600 transition-colors"
+            >
+                重试加载
+            </button>
+            <button 
+                onClick={() => navigate('/')} 
+                className="text-gray-500 hover:text-white text-sm underline"
+            >
+                返回首页
+            </button>
+        </div>
+    );
   }
 
   const isVip = userRank === 'VIP' || isAdminAuthenticated || userRole === 'admin' || userRole === 'boss'; // Boss role is legacy, effectively VIP
