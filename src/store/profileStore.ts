@@ -40,6 +40,23 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     if (loading) return;
 
     set({ loading: true });
+    
+    // Helper to safely parse JSON arrays
+    const parseArray = (val: any): string[] => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+            try {
+                const parsed = JSON.parse(val);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (e) {
+                // If parsing fails, and it's a non-empty string that looks like a URL, maybe wrap it?
+                // But safer to return empty array for now to avoid crashes.
+                console.warn('Failed to parse array:', val);
+            }
+        }
+        return [];
+    };
+
     try {
       console.log('Fetching profiles from Supabase...');
       // Fetch ALL profiles including deleted ones, let frontend filter
@@ -92,8 +109,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
           bonus: p.bonus || '',
           stats: p.stats || { charm: 60, intelligence: 60, agility: 60 },
           price: p.price || '',
-          images: p.images || [],
-          videos: p.videos || [],
+          images: parseArray(p.images),
+          videos: parseArray(p.videos),
           availability: p.availability || 'Available',
           isDeleted: p.is_deleted || false
         }));
