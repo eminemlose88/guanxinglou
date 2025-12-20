@@ -21,85 +21,83 @@ interface ProfileState {
 
 const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
 
-export const useProfileStore = create<ProfileState>()(
-  persist(
-    (set, get) => ({
-      profiles: [],
-      loading: false,
-      error: null,
-      lastFetched: 0,
+export const useProfileStore = create<ProfileState>((set, get) => ({
+  profiles: [],
+  loading: false,
+  error: null,
+  lastFetched: 0,
 
-      fetchProfiles: async (force = false) => {
-        const { lastFetched, profiles, loading } = get();
-        const now = Date.now();
+  fetchProfiles: async (force = false) => {
+    const { lastFetched, profiles, loading } = get();
+    const now = Date.now();
 
-        // Prevent redundant fetches
-        if (!force && profiles.length > 0 && (now - lastFetched < CACHE_DURATION)) {
-          return;
-        }
+    // Prevent redundant fetches
+    if (!force && profiles.length > 0 && (now - lastFetched < CACHE_DURATION)) {
+      return;
+    }
 
-        // Avoid double loading
-        if (loading) return;
+    // Avoid double loading
+    if (loading) return;
 
-        set({ loading: true });
-        try {
-          // Fetch ALL profiles including deleted ones, let frontend filter
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
+    set({ loading: true });
+    try {
+      // Fetch ALL profiles including deleted ones, let frontend filter
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-          if (error) throw error;
-          
-          // Map snake_case from DB to camelCase for frontend
-          if (!data || data.length === 0) {
-            set({ profiles: [], loading: false, lastFetched: now });
-          } else {
-            const mappedProfiles: Profile[] = data.map((p: any) => ({
-              id: p.id,
-              name: p.name || '',
-              rank: p.rank || 'Common', // Default to Common if undefined
-              classType: p.class_type || 'None',
-              description: p.description || '',
-              location: p.location || '',
-              age: p.age || 18,
-              height: p.height || 160,
-              weight: p.weight || 45,
-              cup: p.cup || 'A',
-              occupation: p.occupation || '',
-              isVirgin: p.is_virgin || false,
-              periodDate: p.period_date || '',
-              tattooSmoke: p.tattoo_smoke || '无',
-              limits: p.limits || '',
-              acceptSM: p.accept_sm || false,
-              noCondom: p.no_condom || false,
-              creampie: p.creampie || false,
-              oral: p.oral || false,
-              liveTogether: p.live_together || false,
-              overnight: p.overnight || false,
-              travel: p.travel || '',
-              monthlyBudget: p.monthly_budget || '',
-              monthlyDays: p.monthly_days || '',
-              shortTermBudget: p.short_term_budget || '',
-              paymentSplit: p.payment_split || '',
-              reason: p.reason || '',
-              startTime: p.start_time || '',
-              bonus: p.bonus || '',
-              stats: p.stats || { charm: 60, intelligence: 60, agility: 60 },
-              price: p.price || '',
-              images: p.images || [],
-              videos: p.videos || [],
-              availability: p.availability || 'Available',
-              isDeleted: p.is_deleted || false
-            }));
-            set({ profiles: mappedProfiles, loading: false, lastFetched: now });
-          }
-        } catch (err: any) {
-          console.error('Error fetching profiles:', err);
-          // Stop loading, keep existing profiles or empty if none
-          set({ loading: false, error: err.message, lastFetched: now });
-        }
-      },
+      if (error) throw error;
+      
+      // Map snake_case from DB to camelCase for frontend
+      if (!data || data.length === 0) {
+        set({ profiles: [], loading: false, lastFetched: now });
+      } else {
+        const mappedProfiles: Profile[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name || '',
+          rank: p.rank || 'Common', // Default to Common if undefined
+          classType: p.class_type || 'None',
+          description: p.description || '',
+          location: p.location || '',
+          age: p.age || 18,
+          height: p.height || 160,
+          weight: p.weight || 45,
+          cup: p.cup || 'A',
+          occupation: p.occupation || '',
+          isVirgin: p.is_virgin || false,
+          periodDate: p.period_date || '',
+          tattooSmoke: p.tattoo_smoke || '无',
+          limits: p.limits || '',
+          acceptSM: p.accept_sm || false,
+          noCondom: p.no_condom || false,
+          creampie: p.creampie || false,
+          oral: p.oral || false,
+          liveTogether: p.live_together || false,
+          overnight: p.overnight || false,
+          travel: p.travel || '',
+          monthlyBudget: p.monthly_budget || '',
+          monthlyDays: p.monthly_days || '',
+          shortTermBudget: p.short_term_budget || '',
+          paymentSplit: p.payment_split || '',
+          reason: p.reason || '',
+          startTime: p.start_time || '',
+          bonus: p.bonus || '',
+          stats: p.stats || { charm: 60, intelligence: 60, agility: 60 },
+          price: p.price || '',
+          images: p.images || [],
+          videos: p.videos || [],
+          availability: p.availability || 'Available',
+          isDeleted: p.is_deleted || false
+        }));
+        set({ profiles: mappedProfiles, loading: false, lastFetched: now });
+      }
+    } catch (err: any) {
+      console.error('Error fetching profiles:', err);
+      // Stop loading, keep existing profiles or empty if none
+      set({ loading: false, error: err.message, lastFetched: now });
+    }
+  },
 
   addProfile: async (profile) => {
     try {
@@ -289,11 +287,4 @@ export const useProfileStore = create<ProfileState>()(
   },
 
   getProfile: (id) => get().profiles.find((p) => p.id === id),
-    }),
-    {
-      name: 'profile-storage', // unique name
-      storage: createJSONStorage(() => localStorage), // use localStorage
-      partialize: (state) => ({ profiles: state.profiles, lastFetched: state.lastFetched }), // only persist data and timestamp
-    }
-  )
-);
+}));
